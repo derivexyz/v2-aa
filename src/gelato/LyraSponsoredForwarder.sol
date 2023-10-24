@@ -7,7 +7,7 @@ import {LyraForwarderBase} from "./LyraForwarderBase.sol";
 
 /**
  * @title LyraForwarder
- * @notice this contract help onboarding users with only USDC in their wallet to our custom rollup, with help of Gelato Relayer
+ * @notice use this contract when we want to sponsor gas for users
  */
 contract LyraSponsoredForwarder is LyraForwarderBase, ERC2771Context {
     /**

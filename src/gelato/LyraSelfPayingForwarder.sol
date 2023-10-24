@@ -6,8 +6,8 @@ import {GelatoRelayContextERC2771} from "../../lib/relay-context-contracts/contr
 import {LyraForwarderBase} from "./LyraForwarderBase.sol";
 
 /**
- * @title LyraForwarder
- * @notice this contract help onboarding users with only USDC in their wallet to our custom rollup, with help of Gelato Relayer
+ * @title LyraSelfPayingForwarder
+ * @notice using this contract to allow gasless transactions, but users pay for their own gas with ERC20s
  */
 contract LyraSelfPayingForwarder is LyraForwarderBase, GelatoRelayContextERC2771 {
     constructor(address _usdcLocal, address _usdcRemote, address _bridge)
