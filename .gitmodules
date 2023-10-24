@@ -8,3 +8,6 @@
 [submodule "lib/openzeppelin-contracts"]
 	path = lib/openzeppelin-contracts
 	url = https://github.com/openzeppelin/openzeppelin-contracts
+[submodule "lib/relay-context-contracts"]
+	path = lib/relay-context-contracts
+	url = https://github.com/gelatodigital/relay-context-contracts
