@@ -1,0 +1,5 @@
+{
+  "solidity.packageDefaultDependenciesDirectory": "lib",
+  "solidity.packageDefaultDependenciesContractsDirectory": "lib",
+  "solidity.remappings": ["account-abstraction=lib/account-abstraction/contracts/", "@openzeppelin/=lib/openzeppelin-contracts"]
+}
