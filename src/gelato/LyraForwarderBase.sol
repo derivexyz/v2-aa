@@ -12,7 +12,7 @@ import {IL1StandardBridge} from "../interfaces/IL1StandardBridge.sol";
  * @title LyraForwarder
  * @notice this contract help onboarding users with only USDC in their wallet to our custom rollup, with help of Gelato Relayer
  */
-contract LyraForwarder is ERC2771Context {
+abstract contract LyraForwarderBase {
     ///@dev L1 USDC address.
     address public immutable usdcLocal;
 
@@ -30,13 +30,7 @@ contract LyraForwarder is ERC2771Context {
         bytes32 s;
     }
 
-    /**
-     * @param _trustedForwarder GelatoRelay1BalanceERC2771 forwarder (0xd8253782c45a12053594b9deB72d8e8aB2Fca54c) for all non-zkSync-EVM
-     *
-     */
-    constructor(address _trustedForwarder, address _usdcLocal, address _usdcRemote, address _bridge)
-        ERC2771Context(_trustedForwarder)
-    {
+    constructor(address _usdcLocal, address _usdcRemote, address _bridge) {
         usdcLocal = _usdcLocal;
         usdcRemote = _usdcRemote;
         bridge = _bridge;
@@ -67,4 +61,6 @@ contract LyraForwarder is ERC2771Context {
         // step 3: call bridge to L2 (todo: change to use socket bridge)
         IL1StandardBridge(bridge).bridgeERC20To(usdcLocal, usdcRemote, l2Receiver, depositAmount, minGasLimit, "");
     }
+
+    function _msgSender() internal virtual returns (address);
 }
