@@ -10,15 +10,12 @@ import {LyraForwarderBase} from "./LyraForwarderBase.sol";
  * @notice this contract help onboarding users with only USDC in their wallet to our custom rollup, with help of Gelato Relayer
  */
 contract LyraSelfPayingForwarder is LyraForwarderBase, GelatoRelayContextERC2771 {
-    /**
-     * @param _trustedForwarder GelatoRelay1BalanceERC2771 forwarder (0xd8253782c45a12053594b9deB72d8e8aB2Fca54c) for all non-zkSync-EVM
-     */
-    constructor(address _trustedForwarder, address _usdcLocal, address _usdcRemote, address _bridge)
+    constructor(address _usdcLocal, address _usdcRemote, address _bridge)
         LyraForwarderBase(_usdcLocal, _usdcRemote, _bridge)
-        GelatoRelayContextERC2771(_trustedForwarder)
+        GelatoRelayContextERC2771()
     {}
 
-    function _msgSender() internal view override(LyraForwarderBase, GelatoRelayContextERC2771) returns (address) {
-        return GelatoRelayContextERC2771._msgSender();
+    function _msgSender() internal view override returns (address) {
+        return GelatoRelayContextERC2771._getMsgSender();
     }
 }
