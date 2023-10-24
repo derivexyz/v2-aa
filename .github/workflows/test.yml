@@ -1,34 +1,28 @@
 name: test
-
-on: workflow_dispatch
-
-env:
-  FOUNDRY_PROFILE: ci
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - "**"
 
 jobs:
-  check:
-    strategy:
-      fail-fast: true
-
-    name: Foundry project
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: recursive
 
+      - name: Install Submodules
+        run: git submodule update --init --recursive
+  
       - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
+        uses: onbjerg/foundry-toolchain@v1
         with:
           version: nightly
-
-      - name: Run Forge build
-        run: |
-          forge --version
-          forge build --sizes
-        id: build
-
-      - name: Run Forge tests
-        run: |
-          forge test -vvv
-        id: test
+      
+      - name: Check format
+        run: forge fmt --check
+      
+      - name: Run tests
+        run: forge test -vvv
