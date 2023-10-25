@@ -47,7 +47,7 @@ contract Deploy is Script {
                 trustedForwarder: 0xd8253782c45a12053594b9deB72d8e8aB2Fca54c,
                 usdcLocal: 0xe05606174bac4A6364B31bd0eCA4bf4dD368f8C6, // official USDC op goerli
                 usdcRemote: 0x0000000000000000000000000000000000000000, //
-                bridge: 0x0000000000000000000000000000000000000000, // not testing l1 standard bridge on goerli
+                bridge: 0x0000000000000000000000000000000000000000, // no standard bridge on goerli
                 socketVault: 0x0000000000000000000000000000000000000000 // todo: add socket vault
             });
         }
