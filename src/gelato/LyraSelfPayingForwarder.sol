@@ -10,8 +10,8 @@ import {LyraForwarderBase} from "./LyraForwarderBase.sol";
  * @notice using this contract to allow gasless transactions, but users pay for their own gas with ERC20s
  */
 contract LyraSelfPayingForwarder is LyraForwarderBase, GelatoRelayContextERC2771 {
-    constructor(address _usdcLocal, address _usdcRemote, address _bridge)
-        LyraForwarderBase(_usdcLocal, _usdcRemote, _bridge)
+    constructor(address _usdcLocal, address _usdcRemote, address _bridge, address _socketVault)
+        LyraForwarderBase(_usdcLocal, _usdcRemote, _bridge, _socketVault)
         GelatoRelayContextERC2771()
     {}
 
