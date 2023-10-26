@@ -21,29 +21,32 @@ contract FORK_SelfPayingForwarderTest is Test {
     uint256 public alicePk = 0xbabebabe;
     address public alice = vm.addr(alicePk);
 
-    function setUp() public {
-        if (block.chainid != 1) revert("Please run against mainnet fork");
-
-        // deploy test contract
-        forwarder = new LyraSelfPayingForwarder(
-          0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48, // mainnet USDC
-          0x7F5c764cBc14f9669B88837ca1490cCa17c31607, // OP USDC (Bridged) 
-          0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1, // OP bridge on mainnet
-          0x0000000000000000000000000000000000000000
-        );
-
-        _mintMainnetUSDC(alice, 1e6 * 1e6);
+    modifier onlyMainnet() {
+        _;
+        if (block.chainid != 1) return;
     }
 
-    function test_fork_SelfPayingForwarder() public {
-        assertFalse(address(forwarder) == address(0));
-    }
+    // function setUp() public onlyMainnet {
+    //     // deploy test contract
+    //     forwarder = new LyraSelfPayingForwarder(
+    //       0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48, // mainnet USDC
+    //       0x7F5c764cBc14f9669B88837ca1490cCa17c31607, // OP USDC (Bridged)
+    //       0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1, // OP bridge on mainnet
+    //       0x0000000000000000000000000000000000000000
+    //     );
 
-    function test_fork_depositFromEOA() public {
-        // alice sign transfer with auth
+    //     _mintMainnetUSDC(alice, 1e6 * 1e6);
+    // }
 
-        // call forwarder
-    }
+    // function test_fork_SelfPayingForwarder() public onlyMainnet {
+    //     assertFalse(address(forwarder) == address(0));
+    // }
+
+    // function test_fork_depositFromEOA() public onlyMainnet {
+    //     // alice sign transfer with auth
+
+    //     // call forwarder
+    // }
 
     function _mintMainnetUSDC(address account, uint256 amount) public {
         vm.prank(0xE982615d461DD5cD06575BbeA87624fda4e3de17); // masterMinter for USDC

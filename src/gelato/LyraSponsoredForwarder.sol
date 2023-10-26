@@ -2,8 +2,11 @@
 pragma solidity ^0.8.9;
 
 import {ERC2771Context} from "../../lib/relay-context-contracts/contracts/vendor/ERC2771Context.sol";
-
 import {LyraForwarderBase} from "./LyraForwarderBase.sol";
+import {IL1StandardBridge} from "../interfaces/IL1StandardBridge.sol";
+import {ISocketVault} from "../interfaces/ISocketVault.sol";
+
+import {IERC3009} from "../interfaces/IERC3009.sol";
 
 /**
  * @title LyraForwarder
@@ -21,7 +24,61 @@ contract LyraSponsoredForwarder is LyraForwarderBase, ERC2771Context {
         address _socketVault
     ) LyraForwarderBase(_usdcLocal, _usdcRemote, _bridge, _socketVault) ERC2771Context(_trustedForwarder) {}
 
-    function _msgSender() internal view override(LyraForwarderBase, ERC2771Context) returns (address) {
-        return ERC2771Context._msgSender();
+    /**
+     * @notice Deposit USDC to L2
+     * @dev Users never have to approve USDC to this contract, we use receiveWithAuthorization to save gas
+     * @param depositAmount Amount of USDC to deposit
+     * @param l2Receiver    Address of the receiver on L2
+     * @param minGasLimit   Minimum gas limit for the L2 execution
+     */
+    function depositUSDCNativeBridge(
+        uint256 depositAmount,
+        address l2Receiver,
+        uint32 minGasLimit,
+        ReceiveWithAuthData calldata authData
+    ) external {
+        // step 1: receive USDC from user to this contract
+        IERC3009(usdcLocal).receiveWithAuthorization(
+            _msgSender(),
+            address(this),
+            authData.value,
+            authData.validAfter,
+            authData.validBefore,
+            authData.nonce,
+            authData.v,
+            authData.r,
+            authData.s
+        );
+
+        // step 3: call bridge to L2
+        IL1StandardBridge(standardBridge).bridgeERC20To(
+            usdcLocal, usdcRemote, l2Receiver, depositAmount, minGasLimit, ""
+        );
+    }
+
+    /**
+     * @notice Deposit USDC to L2 through other socket fast bridge
+     */
+    function depositUSDCSocketBridge(
+        uint256 depositAmount,
+        address l2Receiver,
+        uint32 minGasLimit,
+        address connector,
+        ReceiveWithAuthData calldata authData
+    ) external {
+        // step 1: receive USDC from user to this contract
+        IERC3009(usdcLocal).receiveWithAuthorization(
+            _msgSender(),
+            address(this),
+            authData.value,
+            authData.validAfter,
+            authData.validBefore,
+            authData.nonce,
+            authData.v,
+            authData.r,
+            authData.s
+        );
+
+        ISocketVault(usdcSocketVault).depositToAppChain(l2Receiver, depositAmount, minGasLimit, connector);
     }
 }
