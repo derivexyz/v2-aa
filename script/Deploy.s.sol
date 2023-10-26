@@ -30,15 +30,15 @@ contract Deploy is Script {
             config.trustedForwarder,
             config.usdcLocal,
             config.usdcRemote,
-            config.bridge,
-            config.socketVault
+            config.bridge
+            // config.socketVault
         );
 
         LyraSelfPayingForwarder selfPayingForwarder = new LyraSelfPayingForwarder(
             config.usdcLocal,
             config.usdcRemote,
-            config.bridge,
-            config.socketVault
+            config.bridge
+            // config.socketVault
         );
 
         console2.log("LyraSponsoredForwarder deployed at: ", address(sponsoredForwarder));
@@ -48,7 +48,7 @@ contract Deploy is Script {
         vm.stopBroadcast();
     }
 
-    function _getConfig() internal returns (DeploymentConfig memory) {
+    function _getConfig() internal view returns (DeploymentConfig memory) {
         uint256 opgoerli = 420;
 
         if (block.chainid == opgoerli) {

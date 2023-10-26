@@ -1,13 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import {IERC20Permit} from "../../lib/openzeppelin-contracts/contracts/token/ERC20/extensions/draft-IERC20Permit.sol";
 import {IERC20} from "../../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
-
-import {IL1StandardBridge} from "../interfaces/IL1StandardBridge.sol";
-import {ISocketVault} from "../interfaces/ISocketVault.sol";
-
-import {IERC3009} from "../interfaces/IERC3009.sol";
 
 /**
  * @title  LyraForwarder
@@ -29,9 +23,6 @@ abstract contract LyraForwarderBase {
     ///@dev L1StandardBridge address.
     address public immutable standardBridge;
 
-    ///@dev L1SocketVault address (fast bridge)
-    address public immutable usdcSocketVault;
-
     struct ReceiveWithAuthData {
         uint256 value;
         uint256 validAfter;
@@ -42,13 +33,11 @@ abstract contract LyraForwarderBase {
         bytes32 s;
     }
 
-    constructor(address _usdcLocal, address _usdcRemote, address _l1standardBridge, address _socketVault) {
+    constructor(address _usdcLocal, address _usdcRemote, address _l1standardBridge) {
         usdcLocal = _usdcLocal;
         usdcRemote = _usdcRemote;
         standardBridge = _l1standardBridge;
-        usdcSocketVault = _socketVault;
 
         IERC20(_usdcLocal).approve(_l1standardBridge, type(uint256).max);
-        if (_socketVault != address(0)) IERC20(_usdcLocal).approve(_socketVault, type(uint256).max);
     }
 }
