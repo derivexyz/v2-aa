@@ -6,4 +6,5 @@ libs = ["lib"]
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
 
 [rpc_endpoints]
+mainnet = "https://mainnet.infura.io/v3/${INFURA_PROJECT_ID}"
 op_goerli = "https://endpoints.omniatech.io/v1/op/goerli/public"

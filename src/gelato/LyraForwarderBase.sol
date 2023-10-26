@@ -49,7 +49,7 @@ abstract contract LyraForwarderBase {
         usdcSocketVault = _socketVault;
 
         IERC20(_usdcLocal).approve(_l1standardBridge, type(uint256).max);
-        IERC20(_usdcLocal).approve(_socketVault, type(uint256).max);
+        if (_socketVault != address(0)) IERC20(_usdcLocal).approve(_socketVault, type(uint256).max);
     }
 
     /**

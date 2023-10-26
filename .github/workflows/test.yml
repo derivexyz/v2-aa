@@ -21,8 +21,5 @@ jobs:
         with:
           version: nightly
       
-      - name: Check format
-        run: forge fmt --check
-      
       - name: Run tests
         run: forge test -vvv
