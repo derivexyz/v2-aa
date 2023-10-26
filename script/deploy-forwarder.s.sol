@@ -13,7 +13,9 @@ contract Deploy is Script {
         address usdcLocal;
         address usdcRemote;
         address bridge;
+        // socket configs
         address socketVault;
+        address socketConnector;
     }
 
     function run() public {
@@ -30,15 +32,17 @@ contract Deploy is Script {
             config.trustedForwarder,
             config.usdcLocal,
             config.usdcRemote,
-            config.bridge
-            // config.socketVault
+            config.bridge,
+            config.socketVault,
+            config.socketConnector
         );
 
         LyraSelfPayingForwarder selfPayingForwarder = new LyraSelfPayingForwarder(
             config.usdcLocal,
             config.usdcRemote,
-            config.bridge
-            // config.socketVault
+            config.bridge,
+            config.socketVault,
+            config.socketConnector
         );
 
         console2.log("LyraSponsoredForwarder deployed at: ", address(sponsoredForwarder));
@@ -54,19 +58,21 @@ contract Deploy is Script {
         if (block.chainid == opgoerli) {
             return DeploymentConfig({
                 trustedForwarder: 0xd8253782c45a12053594b9deB72d8e8aB2Fca54c,
-                usdcLocal: 0xe05606174bac4A6364B31bd0eCA4bf4dD368f8C6, // official USDC op goerli
-                usdcRemote: 0x0000000000000000000000000000000000000000, //
-                bridge: 0x0000000000000000000000000000000000000000,
-                // no standard bridge on goerli
-                socketVault: 0x0000000000000000000000000000000000000000 // todo: add socket vault
+                usdcLocal: 0x0f8BEaf58d4A237C88c9ed99D82003ab5c252c26, // our clone of USDC on op-goerli, with 18 decimals
+                usdcRemote: 0xe80F2a02398BBf1ab2C9cc52caD1978159c215BD, // our testnet USDC //
+                bridge: 0x0000000000000000000000000000000000000001, // no standard bridge on op-goerli
+                // https://github.com/SocketDotTech/app-chain-token/blob/lyra-tesnet-to-prod/deployments/prod_lyra_addresses.json
+                socketVault: 0x3d74c019E9caCBc968cF31B0810044a030B3E903,
+                socketConnector: 0xfBf496B6DBda9d5e778e2563493BCb32F5A52B51
             });
         } else if (block.chainid == 1) {
             return DeploymentConfig({
                 trustedForwarder: 0x3CACa7b48D0573D793d3b0279b5F0029180E83b6,
                 usdcLocal: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48, // mainnet USDC
                 usdcRemote: 0x7F5c764cBc14f9669B88837ca1490cCa17c31607, // OP USDC (Bridged)
-                bridge: 0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1, // OP bridge on mainnet
-                socketVault: 0x0000000000000000000000000000000000000000
+                bridge: 0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1, // OP bridge on mainnet todo: change to our bridge
+                socketVault: 0x0000000000000000000000000000000000000001, // todo: add l1 address
+                socketConnector: 0x0000000000000000000000000000000000000001 // todo: add l1 address
             });
         }
 

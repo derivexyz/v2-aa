@@ -16,8 +16,15 @@ contract LyraSponsoredForwarder is LyraForwarderBase, ERC2771Context {
     /**
      * @param _trustedForwarder GelatoRelay1BalanceERC2771 forwarder (0xd8253782c45a12053594b9deB72d8e8aB2Fca54c) for all non-zkSync-EVM
      */
-    constructor(address _trustedForwarder, address _usdcLocal, address _usdcRemote, address _bridge)
-        LyraForwarderBase(_usdcLocal, _usdcRemote, _bridge)
+    constructor(
+        address _trustedForwarder,
+        address _usdcLocal,
+        address _usdcRemote,
+        address _bridge,
+        address _socketVault,
+        address _socketConnector
+    )
+        LyraForwarderBase(_usdcLocal, _usdcRemote, _bridge, _socketVault, _socketConnector)
         ERC2771Context(_trustedForwarder)
     {}
 
@@ -57,11 +64,9 @@ contract LyraSponsoredForwarder is LyraForwarderBase, ERC2771Context {
      * @notice Deposit USDC to L2 through other socket fast bridge
      */
     function depositUSDCSocketBridge(
-        address socketVault,
         uint256 depositAmount,
         address l2Receiver,
         uint32 minGasLimit,
-        address connector,
         ReceiveWithAuthData calldata authData
     ) external {
         // step 1: receive USDC from user to this contract
@@ -77,6 +82,6 @@ contract LyraSponsoredForwarder is LyraForwarderBase, ERC2771Context {
             authData.s
         );
 
-        ISocketVault(socketVault).depositToAppChain(l2Receiver, depositAmount, minGasLimit, connector);
+        ISocketVault(socketVault).depositToAppChain(l2Receiver, depositAmount, minGasLimit, socketConnector);
     }
 }

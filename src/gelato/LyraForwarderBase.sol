@@ -23,6 +23,12 @@ abstract contract LyraForwarderBase {
     ///@dev L1StandardBridge address.
     address public immutable standardBridge;
 
+    ///@dev SocketVault address.
+    address public immutable socketVault;
+
+    ///@dev SocketConnector address.
+    address public immutable socketConnector;
+
     struct ReceiveWithAuthData {
         uint256 value;
         uint256 validAfter;
@@ -33,11 +39,20 @@ abstract contract LyraForwarderBase {
         bytes32 s;
     }
 
-    constructor(address _usdcLocal, address _usdcRemote, address _l1standardBridge) {
+    constructor(
+        address _usdcLocal,
+        address _usdcRemote,
+        address _l1standardBridge,
+        address _socketVault,
+        address _socketConnector
+    ) {
         usdcLocal = _usdcLocal;
         usdcRemote = _usdcRemote;
         standardBridge = _l1standardBridge;
+        socketVault = _socketVault;
+        socketConnector = _socketConnector;
 
         IERC20(_usdcLocal).approve(_l1standardBridge, type(uint256).max);
+        IERC20(_usdcLocal).approve(_socketVault, type(uint256).max);
     }
 }
