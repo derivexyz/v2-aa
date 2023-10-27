@@ -87,6 +87,8 @@ contract LyraSelfPayingForwarder is LyraForwarderBase, GelatoRelayContextERC2771
 
         uint256 remaining = depositAmount - _getFee();
 
+        // todo: socket protocol fee
+
         ISocketVault(socketVault).depositToAppChain(l2Receiver, remaining, minGasLimit, socketConnector);
     }
 }

@@ -28,6 +28,8 @@ contract LyraSponsoredForwarder is LyraForwarderBase, ERC2771Context {
         ERC2771Context(_trustedForwarder)
     {}
 
+    receive() external payable {}
+
     /**
      * @notice Deposit USDC to L2
      * @dev Users never have to approve USDC to this contract, we use receiveWithAuthorization to save gas
@@ -82,6 +84,10 @@ contract LyraSponsoredForwarder is LyraForwarderBase, ERC2771Context {
             authData.s
         );
 
-        ISocketVault(socketVault).depositToAppChain(l2Receiver, depositAmount, minGasLimit, socketConnector);
+        uint256 feeInWei = ISocketVault(socketVault).getMinFees(socketConnector, minGasLimit);
+
+        ISocketVault(socketVault).depositToAppChain{value: feeInWei}(
+            l2Receiver, depositAmount, minGasLimit, socketConnector
+        );
     }
 }
