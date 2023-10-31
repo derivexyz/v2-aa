@@ -2,6 +2,7 @@
 pragma solidity ^0.8.9;
 
 import {IERC20} from "../../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import {ILightAccountFactory} from "../interfaces/ILightAccountFactory.sol";
 
 /**
  * @title  LyraForwarder
@@ -29,6 +30,10 @@ abstract contract LyraForwarderBase {
     ///@dev SocketConnector address.
     address public immutable socketConnector;
 
+    ///@dev Light Account factory address.
+    ///     See this script for more info https://github.com/alchemyplatform/light-account/blob/main/script/Deploy_LightAccountFactory.s.sol
+    address public constant lightAccountFactory = 0x000000893A26168158fbeaDD9335Be5bC96592E2;
+
     struct ReceiveWithAuthData {
         uint256 value;
         uint256 validAfter;
@@ -54,5 +59,18 @@ abstract contract LyraForwarderBase {
 
         IERC20(_usdcLocal).approve(_l1standardBridge, type(uint256).max);
         IERC20(_usdcLocal).approve(_socketVault, type(uint256).max);
+    }
+
+    /**
+     * @dev Get the recipient address based on isSCW flag
+     * @param sender The real sender of the transaction
+     * @param isSCW  True if the sender wants to deposit to smart contract wallet
+     */
+    function _getL2Receiver(address sender, bool isSCW) internal view returns (address) {
+        if (isSCW) {
+            return ILightAccountFactory(lightAccountFactory).getAddress(sender, 0);
+        } else {
+            return sender;
+        }
     }
 }

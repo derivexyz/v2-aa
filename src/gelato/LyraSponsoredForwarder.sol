@@ -9,22 +9,22 @@ import {IERC3009} from "../interfaces/IERC3009.sol";
 
 /**
  * @title LyraForwarder
- * @notice use this contract when we want to sponsor gas for users
+ * @notice Use this contract when we want to sponsor gas for users
  */
 contract LyraSponsoredForwarder is LyraForwarderBase, ERC2771Context {
     /**
-     * @param _trustedForwarder GelatoRelay1BalanceERC2771 forwarder (0xd8253782c45a12053594b9deB72d8e8aB2Fca54c) for all non-zkSync-EVM
+     * @dev GelatoRelay1BalanceERC2771 forwarder (0xd8253782c45a12053594b9deB72d8e8aB2Fca54c) is used for all non-zkSync-EVM
      */
     constructor(
-        address _trustedForwarder,
         address _usdcLocal,
         address _usdcRemote,
         address _bridge,
         address _socketVault,
         address _socketConnector
     )
+        payable
         LyraForwarderBase(_usdcLocal, _usdcRemote, _bridge, _socketVault, _socketConnector)
-        ERC2771Context(_trustedForwarder)
+        ERC2771Context(0xd8253782c45a12053594b9deB72d8e8aB2Fca54c)
     {}
 
     receive() external payable {}
@@ -32,19 +32,22 @@ contract LyraSponsoredForwarder is LyraForwarderBase, ERC2771Context {
     /**
      * @notice Deposit USDC to L2
      * @dev Users never have to approve USDC to this contract, we use receiveWithAuthorization to save gas
+     *
      * @param depositAmount Amount of USDC to deposit
-     * @param l2Receiver    Address of the receiver on L2
+     * @param isScwWallet   True if user wants to deposit to default LightAccount on L2
      * @param minGasLimit   Minimum gas limit for the L2 execution
+     * @param authData      Data and signatures for receiveWithAuthorization
      */
     function depositUSDCNativeBridge(
         uint256 depositAmount,
-        address l2Receiver,
+        bool isScwWallet,
         uint32 minGasLimit,
         ReceiveWithAuthData calldata authData
     ) external {
-        // step 1: receive USDC from user to this contract
+        address msgSender = _msgSender();
+
         IERC3009(usdcLocal).receiveWithAuthorization(
-            _msgSender(),
+            msgSender,
             address(this),
             authData.value,
             authData.validAfter,
@@ -57,22 +60,30 @@ contract LyraSponsoredForwarder is LyraForwarderBase, ERC2771Context {
 
         // step 3: call bridge to L2
         IL1StandardBridge(standardBridge).bridgeERC20To(
-            usdcLocal, usdcRemote, l2Receiver, depositAmount, minGasLimit, ""
+            usdcLocal, usdcRemote, _getL2Receiver(msgSender, isScwWallet), depositAmount, minGasLimit, ""
         );
     }
 
     /**
-     * @notice Deposit USDC to L2 through other socket fast bridge
+     * @notice Deposit USDC to L2 through Socket fast bridge
+     * @dev Users never have to approve USDC to this contract, we use receiveWithAuthorization to save gas
+     *
+     * @param depositAmount Amount of USDC to deposit
+     * @param isScwWallet   True if user wants to deposit to default LightAccount on L2
+     * @param minGasLimit   Minimum gas limit for the L2 execution
+     * @param authData      Data and signatures for receiveWithAuthorization
      */
     function depositUSDCSocketBridge(
         uint256 depositAmount,
-        address l2Receiver,
+        bool isScwWallet,
         uint32 minGasLimit,
         ReceiveWithAuthData calldata authData
     ) external {
+        address msgSender = _msgSender();
+
         // step 1: receive USDC from user to this contract
         IERC3009(usdcLocal).receiveWithAuthorization(
-            _msgSender(),
+            msgSender,
             address(this),
             authData.value,
             authData.validAfter,
@@ -86,7 +97,7 @@ contract LyraSponsoredForwarder is LyraForwarderBase, ERC2771Context {
         uint256 feeInWei = ISocketVault(socketVault).getMinFees(socketConnector, minGasLimit);
 
         ISocketVault(socketVault).depositToAppChain{value: feeInWei}(
-            l2Receiver, depositAmount, minGasLimit, socketConnector
+            _getL2Receiver(msgSender, isScwWallet), depositAmount, minGasLimit, socketConnector
         );
     }
 }

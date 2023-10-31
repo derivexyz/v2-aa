@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
 
-interface LightAccountFactory {
-    
+interface ILightAccountFactory {
     /**
      * @notice Create an account, and return its address.
      * Returns the address even if the account is already deployed.
