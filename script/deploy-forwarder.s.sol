@@ -6,8 +6,6 @@ import {LyraSelfPayingForwarder} from "src/gelato/LyraSelfPayingForwarder.sol";
 import {LyraSponsoredForwarder} from "src/gelato/LyraSponsoredForwarder.sol";
 
 contract Deploy is Script {
-    function setUp() public {}
-
     struct DeploymentConfig {
         // Funding
         uint256 fundingAmount;
@@ -25,8 +23,7 @@ contract Deploy is Script {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
-        address deployer = vm.addr(deployerPrivateKey);
-        console2.log("Start deploying core contracts! deployer: ", deployer);
+        console2.log("Start deploying helper contracts! Deployer: ", vm.addr(deployerPrivateKey));
 
         DeploymentConfig memory config = _getConfig();
 
@@ -38,7 +35,6 @@ contract Deploy is Script {
             config.socketVault,
             config.socketConnector
         );
-        // fund some eth for socket fees
 
         // LyraSelfPayingForwarder selfPayingForwarder = new LyraSelfPayingForwarder(
         //     config.usdcLocal,
@@ -69,6 +65,7 @@ contract Deploy is Script {
                 socketConnector: 0xfBf496B6DBda9d5e778e2563493BCb32F5A52B51
             });
         } else if (block.chainid == 1) {
+            // Mainnet
             return DeploymentConfig({
                 fundingAmount: 0.1 ether,
                 usdcLocal: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48, // mainnet USDC
@@ -79,6 +76,6 @@ contract Deploy is Script {
             });
         }
 
-        revert("Need config set! Please set config in script/Deploy.s.sol");
+        revert("No config for this network! Please set config in script/Deploy.s.sol");
     }
 }
