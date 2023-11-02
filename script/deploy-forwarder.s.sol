@@ -28,15 +28,7 @@ contract Deploy is Script {
         DeploymentConfig memory config = _getConfig();
 
         // deploy LyraSponsoredForwarder
-        LyraSponsoredForwarder sponsoredForwarder = new LyraSponsoredForwarder{value: config.fundingAmount}(
-            config.usdcLocal,
-            config.usdcRemote,
-            config.bridge,
-            config.socketVault,
-            config.socketConnector
-        );
-
-        // LyraSelfPayingForwarder selfPayingForwarder = new LyraSelfPayingForwarder(
+        // LyraSponsoredForwarder sponsoredForwarder = new LyraSponsoredForwarder{value: config.fundingAmount}(
         //     config.usdcLocal,
         //     config.usdcRemote,
         //     config.bridge,
@@ -44,9 +36,17 @@ contract Deploy is Script {
         //     config.socketConnector
         // );
 
-        console2.log("LyraSponsoredForwarder deployed at: ", address(sponsoredForwarder));
+        LyraSelfPayingForwarder selfPayingForwarder = new LyraSelfPayingForwarder(
+            config.usdcLocal,
+            config.usdcRemote,
+            config.bridge,
+            config.socketVault,
+            config.socketConnector
+        );
 
-        // console2.log("LyraSelfPayingForwarder deployed at: ", address(selfPayingForwarder));
+        // console2.log("LyraSponsoredForwarder deployed at: ", address(sponsoredForwarder));
+
+        console2.log("LyraSelfPayingForwarder deployed at: ", address(selfPayingForwarder));
 
         vm.stopBroadcast();
     }

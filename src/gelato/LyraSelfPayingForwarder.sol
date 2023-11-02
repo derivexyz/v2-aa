@@ -2,7 +2,6 @@
 pragma solidity ^0.8.9;
 
 import {GelatoRelayContextERC2771} from "../../lib/relay-context-contracts/contracts/GelatoRelayContextERC2771.sol";
-import {IERC20Permit} from "../../lib/openzeppelin-contracts/contracts/token/ERC20/extensions/draft-IERC20Permit.sol";
 
 import {LyraForwarderBase} from "./LyraForwarderBase.sol";
 
@@ -23,7 +22,11 @@ contract LyraSelfPayingForwarder is LyraForwarderBase, GelatoRelayContextERC2771
         address _bridge,
         address _socketVault,
         address _socketConnector
-    ) LyraForwarderBase(_usdcLocal, _usdcRemote, _bridge, _socketVault, _socketConnector) GelatoRelayContextERC2771() {}
+    )
+        payable
+        LyraForwarderBase(_usdcLocal, _usdcRemote, _bridge, _socketVault, _socketConnector)
+        GelatoRelayContextERC2771()
+    {}
 
     /**
      * @notice Deposit USDC to L2
@@ -61,7 +64,7 @@ contract LyraSelfPayingForwarder is LyraForwarderBase, GelatoRelayContextERC2771
     }
 
     /**
-     * @notice Deposit USDC to L2 through other socket fast bridge
+     * @notice Deposit USDC to L2 through other socket fast bridge. Gas is paid in USDC
      */
     function depositUSDCSocketBridge(
         uint256 depositAmount,
@@ -85,10 +88,16 @@ contract LyraSelfPayingForwarder is LyraForwarderBase, GelatoRelayContextERC2771
             authData.s
         );
 
+        // pay gelato fee
         uint256 remaining = depositAmount - _getFee();
 
-        // todo: socket protocol fee
+        // pay socket protocol fee
+        uint256 socketFee = ISocketVault(socketVault).getMinFees(socketConnector, minGasLimit);
 
-        ISocketVault(socketVault).depositToAppChain(l2Receiver, remaining, minGasLimit, socketConnector);
+        ISocketVault(socketVault).depositToAppChain{value: socketFee}(
+            l2Receiver, remaining, minGasLimit, socketConnector
+        );
     }
+
+    receive() external payable {}
 }
