@@ -33,17 +33,13 @@ contract LyraSponsoredForwarder is LyraForwarderBase, ERC2771Context {
      * @notice Deposit USDC to L2
      * @dev Users never have to approve USDC to this contract, we use receiveWithAuthorization to save gas
      *
-     * @param depositAmount Amount of USDC to deposit
      * @param isScwWallet   True if user wants to deposit to default LightAccount on L2
      * @param minGasLimit   Minimum gas limit for the L2 execution
      * @param authData      Data and signatures for receiveWithAuthorization
      */
-    function depositUSDCNativeBridge(
-        uint256 depositAmount,
-        bool isScwWallet,
-        uint32 minGasLimit,
-        ReceiveWithAuthData calldata authData
-    ) external {
+    function depositUSDCNativeBridge(bool isScwWallet, uint32 minGasLimit, ReceiveWithAuthData calldata authData)
+        external
+    {
         address msgSender = _msgSender();
 
         IERC3009(usdcLocal).receiveWithAuthorization(
@@ -60,7 +56,7 @@ contract LyraSponsoredForwarder is LyraForwarderBase, ERC2771Context {
 
         // step 3: call bridge to L2
         IL1StandardBridge(standardBridge).bridgeERC20To(
-            usdcLocal, usdcRemote, _getL2Receiver(msgSender, isScwWallet), depositAmount, minGasLimit, ""
+            usdcLocal, usdcRemote, _getL2Receiver(msgSender, isScwWallet), authData.value, minGasLimit, ""
         );
     }
 
@@ -68,17 +64,13 @@ contract LyraSponsoredForwarder is LyraForwarderBase, ERC2771Context {
      * @notice Deposit USDC to L2 through Socket fast bridge
      * @dev Users never have to approve USDC to this contract, we use receiveWithAuthorization to save gas
      *
-     * @param depositAmount Amount of USDC to deposit
      * @param isScwWallet   True if user wants to deposit to default LightAccount on L2
      * @param minGasLimit   Minimum gas limit for the L2 execution
      * @param authData      Data and signatures for receiveWithAuthorization
      */
-    function depositUSDCSocketBridge(
-        uint256 depositAmount,
-        bool isScwWallet,
-        uint32 minGasLimit,
-        ReceiveWithAuthData calldata authData
-    ) external {
+    function depositUSDCSocketBridge(bool isScwWallet, uint32 minGasLimit, ReceiveWithAuthData calldata authData)
+        external
+    {
         address msgSender = _msgSender();
 
         // step 1: receive USDC from user to this contract
@@ -97,7 +89,7 @@ contract LyraSponsoredForwarder is LyraForwarderBase, ERC2771Context {
         uint256 feeInWei = ISocketVault(socketVault).getMinFees(socketConnector, minGasLimit);
 
         ISocketVault(socketVault).depositToAppChain{value: feeInWei}(
-            _getL2Receiver(msgSender, isScwWallet), depositAmount, minGasLimit, socketConnector
+            _getL2Receiver(msgSender, isScwWallet), authData.value, minGasLimit, socketConnector
         );
     }
 }

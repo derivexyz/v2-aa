@@ -31,19 +31,15 @@ contract LyraSelfPayingForwarder is LyraForwarderBase, GelatoRelayContextERC2771
     /**
      * @notice Deposit USDC to L2
      * @dev Users never have to approve USDC to this contract, we use receiveWithAuthorization to save gas
-     * @param depositAmount Amount of USDC to deposit
      * @param l2Receiver    Address of the receiver on L2
      * @param minGasLimit   Minimum gas limit for the L2 execution
      */
     function depositUSDCNativeBridge(
-        uint256 depositAmount,
         uint256 maxERC20Fee,
         address l2Receiver,
         uint32 minGasLimit,
         ReceiveWithAuthData calldata authData
     ) external onlyGelatoRelayERC2771 {
-        _transferRelayFeeCapped(maxERC20Fee);
-
         // step 1: receive USDC from user to this contract
         IERC3009(usdcLocal).receiveWithAuthorization(
             _getMsgSender(),
@@ -57,7 +53,9 @@ contract LyraSelfPayingForwarder is LyraForwarderBase, GelatoRelayContextERC2771
             authData.s
         );
 
-        uint256 remaining = depositAmount - _getFee();
+        _transferRelayFeeCapped(maxERC20Fee);
+
+        uint256 remaining = authData.value - _getFee();
 
         // step 3: call bridge to L2
         IL1StandardBridge(standardBridge).bridgeERC20To(usdcLocal, usdcRemote, l2Receiver, remaining, minGasLimit, "");
@@ -67,14 +65,11 @@ contract LyraSelfPayingForwarder is LyraForwarderBase, GelatoRelayContextERC2771
      * @notice Deposit USDC to L2 through other socket fast bridge. Gas is paid in USDC
      */
     function depositUSDCSocketBridge(
-        uint256 depositAmount,
         uint256 maxERC20Fee,
         address l2Receiver,
         uint32 minGasLimit,
         ReceiveWithAuthData calldata authData
     ) external onlyGelatoRelayERC2771 {
-        _transferRelayFeeCapped(maxERC20Fee);
-
         // step 1: receive USDC from user to this contract
         IERC3009(usdcLocal).receiveWithAuthorization(
             _getMsgSender(),
@@ -88,8 +83,10 @@ contract LyraSelfPayingForwarder is LyraForwarderBase, GelatoRelayContextERC2771
             authData.s
         );
 
+        _transferRelayFeeCapped(maxERC20Fee);
+
         // pay gelato fee
-        uint256 remaining = depositAmount - _getFee();
+        uint256 remaining = authData.value - _getFee();
 
         // pay socket protocol fee
         uint256 socketFee = ISocketVault(socketVault).getMinFees(socketConnector, minGasLimit);
