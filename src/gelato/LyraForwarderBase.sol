@@ -5,10 +5,8 @@ import {IERC20} from "../../lib/openzeppelin-contracts/contracts/token/ERC20/IER
 import {ILightAccountFactory} from "../interfaces/ILightAccountFactory.sol";
 
 /**
- * @title  LyraForwarder
- * @notice This contract help onboarding users with only USDC in their wallet to our custom rollup, with help of Gelato Relayer
- * @dev    All functions use _msgSender() to be compatible with ERC2771.
- *         Users never have to approve USDC to this contract, we use receiveWithAuthorization to save gas on USDC
+ * @title  LyraForwarderBase
+ * @notice Shared logic for both self-paying and sponsored forwarder
  */
 abstract contract LyraForwarderBase {
     // keccak256("ReceiveWithAuthorization(address from,address to,uint256 value,uint256 validAfter,uint256 validBefore,bytes32 nonce)")

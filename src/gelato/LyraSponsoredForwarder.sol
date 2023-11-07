@@ -74,7 +74,6 @@ contract LyraSponsoredForwarder is LyraForwarderBase, ERC2771Context {
     {
         address msgSender = _msgSender();
 
-        // step 1: receive USDC from user to this contract
         IERC3009(usdcLocal).receiveWithAuthorization(
             msgSender,
             address(this),

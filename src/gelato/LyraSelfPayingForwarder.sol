@@ -12,8 +12,10 @@ import {IERC3009} from "../interfaces/IERC3009.sol";
 
 /**
  * @title  LyraSelfPayingForwarder
- * @notice Use this contract to allow gasless transactions, but users pay for their own gas with ERC20s
- * @dev    This contract can only be called by GELATO_RELAY_ERC2771 or GELATO_RELAY_CONCURRENT_ERC2771
+ * @notice Use this contract to allow gasless transactions, users pay gelato relayers with USDC
+ *
+ * @dev    All functions are guarded with onlyGelatoRelayERC2771. They should only be called by GELATO_RELAY_ERC2771 or GELATO_RELAY_CONCURRENT_ERC2771
+ * @dev    Someone need to fund this contract with ETH to use Socket Bridge
  */
 contract LyraSelfPayingForwarder is LyraForwarderBase, GelatoRelayContextERC2771 {
     constructor(
