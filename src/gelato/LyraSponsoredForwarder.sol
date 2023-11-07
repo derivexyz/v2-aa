@@ -10,6 +10,7 @@ import {IERC3009} from "../interfaces/IERC3009.sol";
 /**
  * @title LyraForwarder
  * @notice Use this contract when we want to sponsor gas for users
+ * @dev    Someone need to fund this contract with ETH to use Socket Bridge
  */
 contract LyraSponsoredForwarder is LyraForwarderBase, ERC2771Context {
     /**

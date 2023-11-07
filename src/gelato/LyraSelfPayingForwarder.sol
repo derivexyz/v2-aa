@@ -31,18 +31,20 @@ contract LyraSelfPayingForwarder is LyraForwarderBase, GelatoRelayContextERC2771
     /**
      * @notice Deposit USDC to L2
      * @dev Users never have to approve USDC to this contract, we use receiveWithAuthorization to save gas
-     * @param l2Receiver    Address of the receiver on L2
+     * @param maxFeeUSDC    Maximum USDC fee that user is willing to pay
+     * @param isScwWallet   True if user wants to deposit to default LightAccount on L2
      * @param minGasLimit   Minimum gas limit for the L2 execution
      */
     function depositUSDCNativeBridge(
-        uint256 maxERC20Fee,
-        address l2Receiver,
+        uint256 maxFeeUSDC,
+        bool isScwWallet,
         uint32 minGasLimit,
         ReceiveWithAuthData calldata authData
     ) external onlyGelatoRelayERC2771 {
-        // step 1: receive USDC from user to this contract
+        address msgSender = _getMsgSender();
+
         IERC3009(usdcLocal).receiveWithAuthorization(
-            _getMsgSender(),
+            msgSender,
             address(this),
             authData.value,
             authData.validAfter,
@@ -53,26 +55,34 @@ contract LyraSelfPayingForwarder is LyraForwarderBase, GelatoRelayContextERC2771
             authData.s
         );
 
-        _transferRelayFeeCapped(maxERC20Fee);
+        // Pay gelato fee, reverts if exceeded maxFeeUSDC
+        _transferRelayFeeCapped(maxFeeUSDC);
 
         uint256 remaining = authData.value - _getFee();
 
-        // step 3: call bridge to L2
-        IL1StandardBridge(standardBridge).bridgeERC20To(usdcLocal, usdcRemote, l2Receiver, remaining, minGasLimit, "");
+        IL1StandardBridge(standardBridge).bridgeERC20To(
+            usdcLocal, usdcRemote, _getL2Receiver(msgSender, isScwWallet), remaining, minGasLimit, ""
+        );
     }
 
     /**
      * @notice Deposit USDC to L2 through other socket fast bridge. Gas is paid in USDC
+     * @dev Users never have to approve USDC to this contract, we use receiveWithAuthorization to save gas
+     * @param maxFeeUSDC    Maximum USDC fee that user is willing to pay
+     * @param isScwWallet   True if user wants to deposit to default LightAccount on L2. False if user wants to deposit to its own L2 address
+     * @param minGasLimit   Minimum gas limit for the L2 execution
+     * @param authData      Data and signatures for receiveWithAuthorization
      */
     function depositUSDCSocketBridge(
-        uint256 maxERC20Fee,
-        address l2Receiver,
+        uint256 maxFeeUSDC,
+        bool isScwWallet,
         uint32 minGasLimit,
         ReceiveWithAuthData calldata authData
     ) external onlyGelatoRelayERC2771 {
-        // step 1: receive USDC from user to this contract
+        address msgSender = _getMsgSender();
+
         IERC3009(usdcLocal).receiveWithAuthorization(
-            _getMsgSender(),
+            msgSender,
             address(this),
             authData.value,
             authData.validAfter,
@@ -83,16 +93,16 @@ contract LyraSelfPayingForwarder is LyraForwarderBase, GelatoRelayContextERC2771
             authData.s
         );
 
-        _transferRelayFeeCapped(maxERC20Fee);
+        // Pay gelato fee, reverts if exceeded maxFeeUSDC
+        _transferRelayFeeCapped(maxFeeUSDC);
 
-        // pay gelato fee
         uint256 remaining = authData.value - _getFee();
 
-        // pay socket protocol fee
         uint256 socketFee = ISocketVault(socketVault).getMinFees(socketConnector, minGasLimit);
 
+        // Pay socket fee and deposit to Lyra Chain
         ISocketVault(socketVault).depositToAppChain{value: socketFee}(
-            l2Receiver, remaining, minGasLimit, socketConnector
+            _getL2Receiver(msgSender, isScwWallet), remaining, minGasLimit, socketConnector
         );
     }
 
