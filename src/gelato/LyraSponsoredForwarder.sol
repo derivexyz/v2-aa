@@ -8,9 +8,10 @@ import {ISocketVault} from "../interfaces/ISocketVault.sol";
 import {IERC3009} from "../interfaces/IERC3009.sol";
 
 /**
- * @title LyraForwarder
- * @notice Use this contract when we want to sponsor gas for users
- * @dev    Someone need to fund this contract with ETH to use Socket Bridge
+ * @title   LyraForwarder
+ * @notice  Use this contract when we want to sponsor gas for users
+ * @dev     Someone need to fund this contract with ETH to use Socket Bridge
+ * @dev     All functions are public, EOAs can also use this contract to use receiveWithAuthorization to deposit USDC
  */
 contract LyraSponsoredForwarder is LyraForwarderBase, ERC2771Context {
     /**
@@ -28,11 +29,9 @@ contract LyraSponsoredForwarder is LyraForwarderBase, ERC2771Context {
         ERC2771Context(0xd8253782c45a12053594b9deB72d8e8aB2Fca54c)
     {}
 
-    receive() external payable {}
-
     /**
-     * @notice Deposit USDC to L2
-     * @dev Users never have to approve USDC to this contract, we use receiveWithAuthorization to save gas
+     * @notice  Deposit user USDC to L2
+     * @dev     Users never have to approve USDC to this contract, we use receiveWithAuthorization to save gas
      *
      * @param isScwWallet   True if user wants to deposit to default LightAccount on L2
      * @param minGasLimit   Minimum gas limit for the L2 execution
@@ -62,8 +61,8 @@ contract LyraSponsoredForwarder is LyraForwarderBase, ERC2771Context {
     }
 
     /**
-     * @notice Deposit USDC to L2 through Socket fast bridge
-     * @dev Users never have to approve USDC to this contract, we use receiveWithAuthorization to save gas
+     * @notice  Deposit user USDC to L2 through Socket fast bridge
+     * @dev     Users never have to approve USDC to this contract, we use receiveWithAuthorization to save gas
      *
      * @param isScwWallet   True if user wants to deposit to default LightAccount on L2
      * @param minGasLimit   Minimum gas limit for the L2 execution
@@ -92,4 +91,6 @@ contract LyraSponsoredForwarder is LyraForwarderBase, ERC2771Context {
             _getL2Receiver(msgSender, isScwWallet), authData.value, minGasLimit, socketConnector
         );
     }
+
+    receive() external payable {}
 }

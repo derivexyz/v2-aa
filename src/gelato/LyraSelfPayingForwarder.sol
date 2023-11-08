@@ -12,7 +12,7 @@ import {IERC3009} from "../interfaces/IERC3009.sol";
 
 /**
  * @title  LyraSelfPayingForwarder
- * @notice Use this contract to allow gasless transactions, users pay gelato relayers with USDC
+ * @notice Use this contract to allow gasless transactions, users pay gelato relayers in USDC
  *
  * @dev    All functions are guarded with onlyGelatoRelayERC2771. They should only be called by GELATO_RELAY_ERC2771 or GELATO_RELAY_CONCURRENT_ERC2771
  * @dev    Someone need to fund this contract with ETH to use Socket Bridge
@@ -31,10 +31,10 @@ contract LyraSelfPayingForwarder is LyraForwarderBase, GelatoRelayContextERC2771
     {}
 
     /**
-     * @notice Deposit USDC to L2
-     * @dev Users never have to approve USDC to this contract, we use receiveWithAuthorization to save gas
+     * @notice  Deposit USDC to L2, paid gas in USDC
+     * @dev     Users never have to approve USDC to this contract, we use receiveWithAuthorization to save gas
      * @param maxFeeUSDC    Maximum USDC fee that user is willing to pay
-     * @param isScwWallet   True if user wants to deposit to default LightAccount on L2
+     * @param isScwWallet   True if user wants to deposit to default LightAccount on L2. False if the user wants to deposit to its own L2 address
      * @param minGasLimit   Minimum gas limit for the L2 execution
      */
     function depositUSDCNativeBridge(
@@ -68,10 +68,10 @@ contract LyraSelfPayingForwarder is LyraForwarderBase, GelatoRelayContextERC2771
     }
 
     /**
-     * @notice Deposit USDC to L2 through other socket fast bridge. Gas is paid in USDC
-     * @dev Users never have to approve USDC to this contract, we use receiveWithAuthorization to save gas
+     * @notice  Deposit USDC to L2 through other socket fast bridge. Gas is paid in USDC
+     * @dev     Users never have to approve USDC to this contract, we use receiveWithAuthorization to save gas
      * @param maxFeeUSDC    Maximum USDC fee that user is willing to pay
-     * @param isScwWallet   True if user wants to deposit to default LightAccount on L2. False if user wants to deposit to its own L2 address
+     * @param isScwWallet   True if user wants to deposit to default LightAccount on L2. False if the user wants to deposit to its own L2 address
      * @param minGasLimit   Minimum gas limit for the L2 execution
      * @param authData      Data and signatures for receiveWithAuthorization
      */
