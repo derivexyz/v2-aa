@@ -24,3 +24,7 @@ $ forge build
 ```shell
 $ forge test
 ```
+
+### Using the contracts
+
+Go see [this repo](https://github.com/antoncoding/lyra-aa-example) for examples
