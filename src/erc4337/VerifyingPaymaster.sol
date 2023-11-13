@@ -1,112 +1,151 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.19;
 
-import "../../lib/account-abstraction/contracts/core/BasePaymaster.sol";
-import {IEntryPoint} from "../../lib/account-abstraction/contracts/interfaces/IEntryPoint.sol";
-import "./ECDSA.sol";
+import { IEntryPoint } from "../../lib/account-abstraction/contracts/interfaces/IEntryPoint.sol";
+import { UserOperation } from "../../lib/account-abstraction/contracts/interfaces/UserOperation.sol";
+import { UserOperationLib } from "../../lib/account-abstraction/contracts/interfaces/UserOperation.sol";
+import { BasePaymaster } from "../../lib/account-abstraction/contracts/core/BasePaymaster.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import "../../lib/account-abstraction/contracts/core/Helpers.sol" as Helpers;
 
 /**
- * Copied from account-abstraction/samples/VerifyingPaymaster.sol
- */
-
-/**
- * A sample paymaster that uses external service to decide whether to pay for the UserOp.
- * The paymaster trusts an external signer to sign the transaction.
- * The calling user must pass the UserOp to that external signer first, which performs
- * whatever off-chain verification before signing the UserOp.
- * Note that this signature is NOT a replacement for the account-specific signature:
- * - the paymaster checks a signature to agree to PAY for GAS.
- * - the account checks a signature to prove identity and account ownership.
+ * A paymaster based on the eth-infinitism sample VerifyingPaymaster contract.
+ * It has the same functionality as the sample, but with added support for withdrawing ERC20 tokens.
+ * All withdrawn tokens will be transferred to the owner address.
+ * Note that the off-chain signer should have a strategy in place to handle a failed token withdrawal.
+ *
+ * See account-abstraction/contracts/samples/VerifyingPaymaster.sol for detailed comments.
  */
 contract VerifyingPaymaster is BasePaymaster {
     using ECDSA for bytes32;
     using UserOperationLib for UserOperation;
+    using SafeERC20 for IERC20;
 
-    address public immutable verifyingSigner;
+    mapping(address sender => uint256 nonce) public senderNonce;
 
-    uint256 private constant VALID_TIMESTAMP_OFFSET = 20;
+    uint256 private constant VALID_PND_OFFSET = 20;
 
-    uint256 private constant SIGNATURE_OFFSET = 84;
+    uint256 private constant SIGNATURE_OFFSET = 148;
 
-    constructor(IEntryPoint _entryPoint, address _verifyingSigner) BasePaymaster(_entryPoint) {
-        verifyingSigner = _verifyingSigner;
+    uint256 public constant POST_OP_GAS = 35000;
+
+    constructor(IEntryPoint _entryPoint, address _owner) BasePaymaster(_entryPoint) {
+        _transferOwnership(_owner);
     }
 
-    /**
-     * return the hash we're going to sign off-chain (and validate on-chain)
-     * this method is called by the off-chain service, to sign the request.
-     * it is called on-chain from the validatePaymasterUserOp, to validate the signature.
-     * note that this signature covers all fields of the UserOperation, except the "paymasterAndData",
-     * which will carry the signature itself.
-     */
-    function getHash(UserOperation calldata userOp, uint48 validUntil, uint48 validAfter)
-        public
-        view
-        returns (bytes32)
-    {
-        //can't use userOp.hash(), since it contains also the paymasterAndData itself.
-        address sender = userOp.getSender();
-        return keccak256(
-            abi.encode(
-                sender,
-                userOp.nonce,
-                keccak256(userOp.initCode),
-                keccak256(userOp.callData),
-                userOp.callGasLimit,
-                userOp.verificationGasLimit,
-                userOp.preVerificationGas,
-                userOp.maxFeePerGas,
-                userOp.maxPriorityFeePerGas,
-                block.chainid,
-                address(this),
-                validUntil,
-                validAfter
-            )
-        );
+    function pack(UserOperation calldata userOp) internal pure returns (bytes memory ret) {
+        bytes calldata pnd = userOp.paymasterAndData;
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            let ofs := userOp
+            let len := sub(sub(pnd.offset, ofs), 32)
+            ret := mload(0x40)
+            mstore(0x40, add(ret, add(len, 32)))
+            mstore(ret, len)
+            calldatacopy(add(ret, 32), ofs, len)
+        }
     }
 
-    /**
-     * verify our external signer signed this request.
-     * the "paymasterAndData" is expected to be the paymaster and a signature over the entire request params
-     * paymasterAndData[:20] : address(this)
-     * paymasterAndData[20:84] : abi.encode(validUntil, validAfter)
-     * paymasterAndData[84:] : signature
-     */
-    function _validatePaymasterUserOp(UserOperation calldata userOp, bytes32, /*userOpHash*/ uint256 requiredPreFund)
-        internal
-        view
-        override
-        returns (bytes memory context, uint256 validationData)
-    {
+    function getHash(
+        UserOperation calldata userOp,
+        uint48 validUntil,
+        uint48 validAfter,
+        address erc20Token,
+        uint256 exchangeRate
+    ) public view returns (bytes32) {
+        return
+            keccak256(
+                abi.encode(
+                    pack(userOp),
+                    block.chainid,
+                    address(this),
+                    senderNonce[userOp.getSender()],
+                    validUntil,
+                    validAfter,
+                    erc20Token,
+                    exchangeRate
+                )
+            );
+    }
+
+    function _validatePaymasterUserOp(
+        UserOperation calldata userOp,
+        bytes32 /*userOpHash*/,
+        uint256 requiredPreFund
+    ) internal override returns (bytes memory context, uint256 validationData) {
         (requiredPreFund);
 
-        (uint48 validUntil, uint48 validAfter, bytes calldata signature) =
-            parsePaymasterAndData(userOp.paymasterAndData);
-        //ECDSA library supports both 64 and 65-byte long signatures.
-        // we only "require" it here so that the revert reason on invalid signature will be of "VerifyingPaymaster", and not "ECDSA"
+        (
+            uint48 validUntil,
+            uint48 validAfter,
+            address erc20Token,
+            uint256 exchangeRate,
+            bytes calldata signature
+        ) = parsePaymasterAndData(userOp.paymasterAndData);
+        // solhint-disable-next-line reason-string
         require(
             signature.length == 64 || signature.length == 65,
             "VerifyingPaymaster: invalid signature length in paymasterAndData"
         );
-        bytes32 hash = ECDSA.toEthSignedMessageHash(getHash(userOp, validUntil, validAfter));
-
-        //don't revert on signature failure: return SIG_VALIDATION_FAILED
-        if (verifyingSigner != ECDSA.recover(hash, signature)) {
-            return ("", _packValidationData(true, validUntil, validAfter));
+        bytes32 hash = ECDSA.toEthSignedMessageHash(getHash(userOp, validUntil, validAfter, erc20Token, exchangeRate));
+        senderNonce[userOp.getSender()]++;
+        context = "";
+        if (erc20Token != address(0)) {
+            context = abi.encode(
+                userOp.sender,
+                erc20Token,
+                exchangeRate,
+                userOp.maxFeePerGas,
+                userOp.maxPriorityFeePerGas
+            );
         }
 
-        //no need for other on-chain validation: entire UserOp should have been checked
-        // by the external service prior to signing it.
-        return ("", _packValidationData(false, validUntil, validAfter));
+        if (owner() != ECDSA.recover(hash, signature)) {
+            return (context, Helpers._packValidationData(true, validUntil, validAfter));
+        }
+
+        return (context, Helpers._packValidationData(false, validUntil, validAfter));
     }
 
-    function parsePaymasterAndData(bytes calldata paymasterAndData)
+    function _postOp(PostOpMode mode, bytes calldata context, uint256 actualGasCost) internal override {
+        (address sender, IERC20 token, uint256 exchangeRate, uint256 maxFeePerGas, uint256 maxPriorityFeePerGas) = abi
+            .decode(context, (address, IERC20, uint256, uint256, uint256));
+
+        uint256 opGasPrice;
+        unchecked {
+            if (maxFeePerGas == maxPriorityFeePerGas) {
+                opGasPrice = maxFeePerGas;
+            } else {
+                opGasPrice = Math.min(maxFeePerGas, maxPriorityFeePerGas + block.basefee);
+            }
+        }
+
+        uint256 actualTokenCost = ((actualGasCost + (POST_OP_GAS * opGasPrice)) * exchangeRate) / 1e18;
+        if (mode != PostOpMode.postOpReverted) {
+            token.safeTransferFrom(sender, owner(), actualTokenCost);
+        }
+    }
+
+    function parsePaymasterAndData(
+        bytes calldata paymasterAndData
+    )
         public
         pure
-        returns (uint48 validUntil, uint48 validAfter, bytes calldata signature)
+        returns (
+            uint48 validUntil,
+            uint48 validAfter,
+            address erc20Token,
+            uint256 exchangeRate,
+            bytes calldata signature
+        )
     {
-        (validUntil, validAfter) =
-            abi.decode(paymasterAndData[VALID_TIMESTAMP_OFFSET:SIGNATURE_OFFSET], (uint48, uint48));
+        (validUntil, validAfter, erc20Token, exchangeRate) = abi.decode(
+            paymasterAndData[VALID_PND_OFFSET:SIGNATURE_OFFSET],
+            (uint48, uint48, address, uint256)
+        );
         signature = paymasterAndData[SIGNATURE_OFFSET:];
     }
 }
