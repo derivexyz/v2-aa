@@ -12,16 +12,10 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import "../../lib/account-abstraction/contracts/core/Helpers.sol" as Helpers;
 
 /**
- * @dev COPIED FROM STACKUP 
- * 
- * A paymaster based on the eth-infinitism sample VerifyingPaymaster contract.
- * It has the same functionality as the sample, but with added support for withdrawing ERC20 tokens.
- * All withdrawn tokens will be transferred to the owner address.
- * Note that the off-chain signer should have a strategy in place to handle a failed token withdrawal.
- *
- * See account-abstraction/contracts/samples/VerifyingPaymaster.sol for detailed comments.
+ * Similar to Stackup VerifyingPaymaster, but with a fix ERC20 fee. 
+ * This is to simplify the off-chain logic to cover wrapper attached eth to pay protocol fee for users
  */
-contract VerifyingPaymaster is BasePaymaster {
+contract VerifyingPaymasterFix is BasePaymaster {
     using ECDSA for bytes32;
     using UserOperationLib for UserOperation;
     using SafeERC20 for IERC20;
@@ -56,7 +50,7 @@ contract VerifyingPaymaster is BasePaymaster {
         uint48 validUntil,
         uint48 validAfter,
         address erc20Token,
-        uint256 exchangeRate
+        uint256 feeAmount
     ) public view returns (bytes32) {
         return
             keccak256(
@@ -68,7 +62,7 @@ contract VerifyingPaymaster is BasePaymaster {
                     validUntil,
                     validAfter,
                     erc20Token,
-                    exchangeRate
+                    feeAmount
                 )
             );
     }
@@ -84,7 +78,7 @@ contract VerifyingPaymaster is BasePaymaster {
             uint48 validUntil,
             uint48 validAfter,
             address erc20Token,
-            uint256 exchangeRate,
+            uint256 feeAmount,
             bytes calldata signature
         ) = parsePaymasterAndData(userOp.paymasterAndData);
         // solhint-disable-next-line reason-string
@@ -92,14 +86,14 @@ contract VerifyingPaymaster is BasePaymaster {
             signature.length == 64 || signature.length == 65,
             "VerifyingPaymaster: invalid signature length in paymasterAndData"
         );
-        bytes32 hash = ECDSA.toEthSignedMessageHash(getHash(userOp, validUntil, validAfter, erc20Token, exchangeRate));
+        bytes32 hash = ECDSA.toEthSignedMessageHash(getHash(userOp, validUntil, validAfter, erc20Token, feeAmount));
         senderNonce[userOp.getSender()]++;
         context = "";
         if (erc20Token != address(0)) {
             context = abi.encode(
                 userOp.sender,
                 erc20Token,
-                exchangeRate,
+                feeAmount,
                 userOp.maxFeePerGas,
                 userOp.maxPriorityFeePerGas
             );
@@ -113,21 +107,11 @@ contract VerifyingPaymaster is BasePaymaster {
     }
 
     function _postOp(PostOpMode mode, bytes calldata context, uint256 actualGasCost) internal override {
-        (address sender, IERC20 token, uint256 exchangeRate, uint256 maxFeePerGas, uint256 maxPriorityFeePerGas) = abi
+        (address sender, IERC20 token, uint256 feeAmount, , ) = abi
             .decode(context, (address, IERC20, uint256, uint256, uint256));
 
-        uint256 opGasPrice;
-        unchecked {
-            if (maxFeePerGas == maxPriorityFeePerGas) {
-                opGasPrice = maxFeePerGas;
-            } else {
-                opGasPrice = Math.min(maxFeePerGas, maxPriorityFeePerGas + block.basefee);
-            }
-        }
-
-        uint256 actualTokenCost = ((actualGasCost + (POST_OP_GAS * opGasPrice)) * exchangeRate) / 1e18;
         if (mode != PostOpMode.postOpReverted) {
-            token.safeTransferFrom(sender, owner(), actualTokenCost);
+            token.safeTransferFrom(sender, owner(), feeAmount);
         }
     }
 
@@ -140,11 +124,11 @@ contract VerifyingPaymaster is BasePaymaster {
             uint48 validUntil,
             uint48 validAfter,
             address erc20Token,
-            uint256 exchangeRate,
+            uint256 feeAmount,
             bytes calldata signature
         )
     {
-        (validUntil, validAfter, erc20Token, exchangeRate) = abi.decode(
+        (validUntil, validAfter, erc20Token, feeAmount) = abi.decode(
             paymasterAndData[VALID_PND_OFFSET:SIGNATURE_OFFSET],
             (uint48, uint48, address, uint256)
         );
