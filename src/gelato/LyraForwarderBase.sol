@@ -16,12 +16,6 @@ abstract contract LyraForwarderBase {
     ///@dev L1 USDC address.
     address public immutable usdcLocal;
 
-    ///@dev L2 USDC address.
-    address public immutable usdcRemote;
-
-    ///@dev L1StandardBridge address.
-    address public immutable standardBridge;
-
     ///@dev SocketVault address.
     address public immutable socketVault;
 
@@ -44,18 +38,13 @@ abstract contract LyraForwarderBase {
 
     constructor(
         address _usdcLocal,
-        address _usdcRemote,
-        address _l1standardBridge,
         address _socketVault,
         address _socketConnector
     ) {
         usdcLocal = _usdcLocal;
-        usdcRemote = _usdcRemote;
-        standardBridge = _l1standardBridge;
         socketVault = _socketVault;
         socketConnector = _socketConnector;
 
-        IERC20(_usdcLocal).approve(_l1standardBridge, type(uint256).max);
         IERC20(_usdcLocal).approve(_socketVault, type(uint256).max);
     }
 
