@@ -20,11 +20,10 @@ import {IERC3009} from "../interfaces/IERC3009.sol";
 contract LyraSelfPayingForwarder is LyraForwarderBase, GelatoRelayContextERC2771 {
     constructor(
         address _usdcLocal,
-        address _socketVault,
-        address _socketConnector
+        address _socketVault
     )
         payable
-        LyraForwarderBase(_usdcLocal, _socketVault, _socketConnector)
+        LyraForwarderBase(_usdcLocal, _socketVault)
         GelatoRelayContextERC2771()
     {}
 
@@ -34,12 +33,14 @@ contract LyraSelfPayingForwarder is LyraForwarderBase, GelatoRelayContextERC2771
      * @param maxFeeUSDC    Maximum USDC fee that user is willing to pay
      * @param isScwWallet   True if user wants to deposit to default LightAccount on L2. False if the user wants to deposit to its own L2 address
      * @param minGasLimit   Minimum gas limit for the L2 execution
+     * @param connector     Socket Connector
      * @param authData      Data and signatures for receiveWithAuthorization
      */
     function depositUSDCSocketBridge(
         uint256 maxFeeUSDC,
         bool isScwWallet,
         uint32 minGasLimit,
+        address connector,
         ReceiveWithAuthData calldata authData
     ) external onlyGelatoRelayERC2771 {
         address msgSender = _getMsgSender();
@@ -61,11 +62,11 @@ contract LyraSelfPayingForwarder is LyraForwarderBase, GelatoRelayContextERC2771
 
         uint256 remaining = authData.value - _getFee();
 
-        uint256 socketFee = ISocketVault(socketVault).getMinFees(socketConnector, minGasLimit);
+        uint256 socketFee = ISocketVault(socketVault).getMinFees(connector, minGasLimit);
 
         // Pay socket fee and deposit to Lyra Chain
         ISocketVault(socketVault).depositToAppChain{value: socketFee}(
-            _getL2Receiver(msgSender, isScwWallet), remaining, minGasLimit, socketConnector
+            _getL2Receiver(msgSender, isScwWallet), remaining, minGasLimit, connector
         );
     }
 

@@ -19,9 +19,6 @@ abstract contract LyraForwarderBase {
     ///@dev SocketVault address.
     address public immutable socketVault;
 
-    ///@dev SocketConnector address.
-    address public immutable socketConnector;
-
     ///@dev Light Account factory address.
     ///     See this script for more info https://github.com/alchemyplatform/light-account/blob/main/script/Deploy_LightAccountFactory.s.sol
     address public constant lightAccountFactory = 0x000000893A26168158fbeaDD9335Be5bC96592E2;
@@ -38,13 +35,11 @@ abstract contract LyraForwarderBase {
 
     constructor(
         address _usdcLocal,
-        address _socketVault,
-        address _socketConnector
+        address _socketVault
     ) {
         usdcLocal = _usdcLocal;
         socketVault = _socketVault;
-        socketConnector = _socketConnector;
-
+        
         IERC20(_usdcLocal).approve(_socketVault, type(uint256).max);
     }
 
