@@ -42,7 +42,7 @@ contract LyraSelfPayingForwarder is LyraForwarderBase, GelatoRelayContextERC2771
         uint32 minGasLimit,
         address connector,
         ReceiveWithAuthData calldata authData
-    ) external onlyGelatoRelayERC2771 {
+    ) external payable onlyGelatoRelayERC2771 {
         address msgSender = _getMsgSender();
 
         IERC3009(usdcLocal).receiveWithAuthorization(

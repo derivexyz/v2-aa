@@ -25,17 +25,17 @@ contract Deploy is Script {
         DeploymentConfig memory config = _getConfig();
 
         // deploy LyraSponsoredForwarder
-        // LyraSponsoredForwarder sponsoredForwarder = new LyraSponsoredForwarder{value: config.fundingAmount}(
-        //     config.usdcLocal,
-        //     config.socketVault
-        // );
+        LyraSponsoredForwarder sponsoredForwarder = new LyraSponsoredForwarder{value: config.fundingAmount}(
+            config.usdcLocal,
+            config.socketVault
+        );
 
         LyraSelfPayingForwarder selfPayingForwarder = new LyraSelfPayingForwarder{value: config.fundingAmount}(
             config.usdcLocal,
             config.socketVault
         );
 
-        // console2.log("LyraSponsoredForwarder deployed at: ", address(sponsoredForwarder));
+        console2.log("LyraSponsoredForwarder deployed at: ", address(sponsoredForwarder));
 
         console2.log("LyraSelfPayingForwarder deployed at: ", address(selfPayingForwarder));
 
