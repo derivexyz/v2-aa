@@ -10,3 +10,4 @@ optimizer_runs = 2000
 [rpc_endpoints]
 mainnet = "https://mainnet.infura.io/v3/${INFURA_PROJECT_ID}"
 op_goerli = "https://optimism-goerli.blockpi.network/v1/rpc/public"
+lyra = "https://rpc.lyra.finance"

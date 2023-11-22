@@ -22,7 +22,8 @@ $ forge build
 ### Test
 
 ```shell
-$ forge test
+# tests on Lyra chain
+$ forge test --fork-url <LyraMainnetRPC>
 ```
 
 ### Using the contracts

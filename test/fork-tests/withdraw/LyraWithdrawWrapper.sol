@@ -2,7 +2,6 @@
 pragma solidity ^0.8.18;
 
 import "lib/forge-std/src/Test.sol";
-import "lib/forge-std/src/console2.sol";
 
 import "src/withdraw/LyraWithdrawWrapper.sol";
 import {USDC} from "src/mocks/USDC.sol";
@@ -45,7 +44,7 @@ contract FORK_LyraWithdrawalTest is Test {
         vm.startPrank(alice);
         IERC20(usdc).approve(address(wrapper), type(uint256).max);
 
-        wrapper.withdrawToL1(amount, alice, connector, 400_000);
+        wrapper.withdrawToL1(amount, alice, connector, 200_000);
         vm.stopPrank();
 
         uint balanceAfter = IERC20(usdc).balanceOf(alice);
@@ -58,7 +57,7 @@ contract FORK_LyraWithdrawalTest is Test {
 
         uint amount = 1e6;
         vm.expectRevert(bytes("withdraw amount < fee"));
-        wrapper.withdrawToL1(amount, alice, connector, 400_000);
+        wrapper.withdrawToL1(amount, alice, connector, 200_000);
 
         vm.stopPrank();
     }
