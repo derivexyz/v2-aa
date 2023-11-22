@@ -21,16 +21,6 @@ contract LyraWithdrawWrapper is Ownable {
     ///@dev static ETH / USD price controlled by owner
     uint256 public staticPrice;
 
-    struct ReceiveWithAuthData {
-        uint256 value;
-        uint256 validAfter;
-        uint256 validBefore;
-        bytes32 nonce;
-        uint8 v;
-        bytes32 r;
-        bytes32 s;
-    }
-
     constructor(
         address _usdc,
         address _socketController,

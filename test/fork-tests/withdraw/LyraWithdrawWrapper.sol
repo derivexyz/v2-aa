@@ -62,12 +62,21 @@ contract FORK_LyraWithdrawalTest is Test {
         vm.stopPrank();
     }
 
-
-    function _mintLyraUSDC(address account, uint256 amount) public {
-        vm.startPrank(connector);
-
-        IFiatController(controller).receiveInbound(abi.encode(account, amount));
+    function test_fork_CanRescueEth() public onlyLyra {
+        vm.prank(alice);
+        vm.expectRevert();
+        wrapper.rescueEth();
+        
+        
+        // can rescue from owner
+        wrapper.rescueEth();
     }
 
 
+    function _mintLyraUSDC(address account, uint256 amount) public {
+        vm.prank(connector);
+        IFiatController(controller).receiveInbound(abi.encode(account, amount));
+    }
+
+    receive() external payable {}
 }
