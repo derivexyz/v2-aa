@@ -18,10 +18,7 @@ import {IERC3009} from "../interfaces/IERC3009.sol";
  * @dev    Someone need to fund this contract with ETH to use Socket Bridge
  */
 contract LyraSelfPayingForwarder is LyraForwarderBase, GelatoRelayContextERC2771 {
-    constructor(
-        address _usdcLocal,
-        address _socketVault
-    )
+    constructor(address _usdcLocal, address _socketVault)
         payable
         LyraForwarderBase(_usdcLocal, _socketVault)
         GelatoRelayContextERC2771()

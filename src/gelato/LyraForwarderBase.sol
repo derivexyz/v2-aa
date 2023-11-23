@@ -33,13 +33,10 @@ abstract contract LyraForwarderBase {
         bytes32 s;
     }
 
-    constructor(
-        address _usdcLocal,
-        address _socketVault
-    ) {
+    constructor(address _usdcLocal, address _socketVault) {
         usdcLocal = _usdcLocal;
         socketVault = _socketVault;
-        
+
         IERC20(_usdcLocal).approve(_socketVault, type(uint256).max);
     }
 

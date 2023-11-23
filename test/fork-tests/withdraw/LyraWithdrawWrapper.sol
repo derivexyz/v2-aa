@@ -16,7 +16,6 @@ contract FORK_LyraWithdrawalTest is Test {
 
     address public immutable connector = address(0x1281C1464449DB73bdAa30928BCC63Dc25D8D187);
 
-    
     LyraWithdrawWrapper public wrapper;
 
     uint256 public alicePk = 0xbabebabe;
@@ -37,9 +36,8 @@ contract FORK_LyraWithdrawalTest is Test {
     }
 
     function test_fork_WithdrawViaWrapper() public onlyLyra {
-        
-        uint balanceBefore = IERC20(usdc).balanceOf(alice);
-        uint amount = 100e6;
+        uint256 balanceBefore = IERC20(usdc).balanceOf(alice);
+        uint256 amount = 100e6;
 
         vm.startPrank(alice);
         IERC20(usdc).approve(address(wrapper), type(uint256).max);
@@ -47,7 +45,7 @@ contract FORK_LyraWithdrawalTest is Test {
         wrapper.withdrawToL1(amount, alice, connector, 200_000);
         vm.stopPrank();
 
-        uint balanceAfter = IERC20(usdc).balanceOf(alice);
+        uint256 balanceAfter = IERC20(usdc).balanceOf(alice);
         assertEq(balanceBefore - balanceAfter, amount);
     }
 
@@ -55,7 +53,7 @@ contract FORK_LyraWithdrawalTest is Test {
         vm.startPrank(alice);
         IERC20(usdc).approve(address(wrapper), type(uint256).max);
 
-        uint amount = 1e6;
+        uint256 amount = 1e6;
         vm.expectRevert(bytes("withdraw amount < fee"));
         wrapper.withdrawToL1(amount, alice, connector, 200_000);
 
@@ -66,12 +64,16 @@ contract FORK_LyraWithdrawalTest is Test {
         vm.prank(alice);
         vm.expectRevert();
         wrapper.rescueEth();
-        
-        
+
         // can rescue from owner
         wrapper.rescueEth();
     }
 
+    function test_fork_getFee() public onlyLyra {
+        uint256 fee = wrapper.getFeeUSDC(connector, 200_000);
+        assertGt(fee, 1e6);
+        assertLt(fee, 300e6);
+    }
 
     function _mintLyraUSDC(address account, uint256 amount) public {
         vm.prank(connector);

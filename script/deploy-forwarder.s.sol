@@ -13,8 +13,8 @@ contract Deploy is Script {
         address usdcLocal;
         // socket configs
         address socketVault;
-        // address socketConnector;
     }
+    // address socketConnector;
 
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
@@ -51,16 +51,18 @@ contract Deploy is Script {
                 // Socket configs
                 // See: https://github.com/SocketDotTech/app-chain-token/blob/lyra-tesnet-to-prod/deployments/prod_lyra_addresses.json
                 socketVault: 0x3d74c019E9caCBc968cF31B0810044a030B3E903
-                // socketConnector: 0xfBf496B6DBda9d5e778e2563493BCb32F5A52B51
-            });
+            })
+            // socketConnector: 0xfBf496B6DBda9d5e778e2563493BCb32F5A52B51
+            ;
         } else if (block.chainid == 1) {
             // Mainnet
             return DeploymentConfig({
                 fundingAmount: 0.15 ether,
                 usdcLocal: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48, // mainnet USDC
                 socketVault: 0x6D303CEE7959f814042D31E0624fB88Ec6fbcC1d
-                // socketConnector: 0x0000000000000000000000000000000000000001 // todo: add l1 address
-            });
+            })
+            // socketConnector: 0x0000000000000000000000000000000000000001 // todo: add l1 address
+            ;
         }
 
         revert("No config for this network! Please set config in script/Deploy.s.sol");

@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.19;
 
-import { IEntryPoint } from "../../lib/account-abstraction/contracts/interfaces/IEntryPoint.sol";
-import { UserOperation } from "../../lib/account-abstraction/contracts/interfaces/UserOperation.sol";
-import { UserOperationLib } from "../../lib/account-abstraction/contracts/interfaces/UserOperation.sol";
-import { BasePaymaster } from "../../lib/account-abstraction/contracts/core/BasePaymaster.sol";
-import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import {IEntryPoint} from "../../lib/account-abstraction/contracts/interfaces/IEntryPoint.sol";
+import {UserOperation} from "../../lib/account-abstraction/contracts/interfaces/UserOperation.sol";
+import {UserOperationLib} from "../../lib/account-abstraction/contracts/interfaces/UserOperation.sol";
+import {BasePaymaster} from "../../lib/account-abstraction/contracts/core/BasePaymaster.sol";
+import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import "../../lib/account-abstraction/contracts/core/Helpers.sol" as Helpers;
 
 /**
- * @dev COPIED FROM STACKUP 
- * 
+ * @dev COPIED FROM STACKUP
+ *
  * A paymaster based on the eth-infinitism sample VerifyingPaymaster contract.
  * It has the same functionality as the sample, but with added support for withdrawing ERC20 tokens.
  * All withdrawn tokens will be transferred to the owner address.
@@ -58,35 +58,29 @@ contract VerifyingPaymaster is BasePaymaster {
         address erc20Token,
         uint256 exchangeRate
     ) public view returns (bytes32) {
-        return
-            keccak256(
-                abi.encode(
-                    pack(userOp),
-                    block.chainid,
-                    address(this),
-                    senderNonce[userOp.getSender()],
-                    validUntil,
-                    validAfter,
-                    erc20Token,
-                    exchangeRate
-                )
-            );
+        return keccak256(
+            abi.encode(
+                pack(userOp),
+                block.chainid,
+                address(this),
+                senderNonce[userOp.getSender()],
+                validUntil,
+                validAfter,
+                erc20Token,
+                exchangeRate
+            )
+        );
     }
 
-    function _validatePaymasterUserOp(
-        UserOperation calldata userOp,
-        bytes32 /*userOpHash*/,
-        uint256 requiredPreFund
-    ) internal override returns (bytes memory context, uint256 validationData) {
+    function _validatePaymasterUserOp(UserOperation calldata userOp, bytes32, /*userOpHash*/ uint256 requiredPreFund)
+        internal
+        override
+        returns (bytes memory context, uint256 validationData)
+    {
         (requiredPreFund);
 
-        (
-            uint48 validUntil,
-            uint48 validAfter,
-            address erc20Token,
-            uint256 exchangeRate,
-            bytes calldata signature
-        ) = parsePaymasterAndData(userOp.paymasterAndData);
+        (uint48 validUntil, uint48 validAfter, address erc20Token, uint256 exchangeRate, bytes calldata signature) =
+            parsePaymasterAndData(userOp.paymasterAndData);
         // solhint-disable-next-line reason-string
         require(
             signature.length == 64 || signature.length == 65,
@@ -96,13 +90,8 @@ contract VerifyingPaymaster is BasePaymaster {
         senderNonce[userOp.getSender()]++;
         context = "";
         if (erc20Token != address(0)) {
-            context = abi.encode(
-                userOp.sender,
-                erc20Token,
-                exchangeRate,
-                userOp.maxFeePerGas,
-                userOp.maxPriorityFeePerGas
-            );
+            context =
+                abi.encode(userOp.sender, erc20Token, exchangeRate, userOp.maxFeePerGas, userOp.maxPriorityFeePerGas);
         }
 
         if (owner() != ECDSA.recover(hash, signature)) {
@@ -113,8 +102,8 @@ contract VerifyingPaymaster is BasePaymaster {
     }
 
     function _postOp(PostOpMode mode, bytes calldata context, uint256 actualGasCost) internal override {
-        (address sender, IERC20 token, uint256 exchangeRate, uint256 maxFeePerGas, uint256 maxPriorityFeePerGas) = abi
-            .decode(context, (address, IERC20, uint256, uint256, uint256));
+        (address sender, IERC20 token, uint256 exchangeRate, uint256 maxFeePerGas, uint256 maxPriorityFeePerGas) =
+            abi.decode(context, (address, IERC20, uint256, uint256, uint256));
 
         uint256 opGasPrice;
         unchecked {
@@ -131,9 +120,7 @@ contract VerifyingPaymaster is BasePaymaster {
         }
     }
 
-    function parsePaymasterAndData(
-        bytes calldata paymasterAndData
-    )
+    function parsePaymasterAndData(bytes calldata paymasterAndData)
         public
         pure
         returns (
@@ -144,10 +131,8 @@ contract VerifyingPaymaster is BasePaymaster {
             bytes calldata signature
         )
     {
-        (validUntil, validAfter, erc20Token, exchangeRate) = abi.decode(
-            paymasterAndData[VALID_PND_OFFSET:SIGNATURE_OFFSET],
-            (uint48, uint48, address, uint256)
-        );
+        (validUntil, validAfter, erc20Token, exchangeRate) =
+            abi.decode(paymasterAndData[VALID_PND_OFFSET:SIGNATURE_OFFSET], (uint48, uint48, address, uint256));
         signature = paymasterAndData[SIGNATURE_OFFSET:];
     }
 }

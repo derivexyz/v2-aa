@@ -17,10 +17,7 @@ contract LyraSponsoredForwarder is LyraForwarderBase, ERC2771Context {
     /**
      * @dev GelatoRelay1BalanceERC2771 forwarder (0xd8253782c45a12053594b9deB72d8e8aB2Fca54c) is used for all non-zkSync-EVM
      */
-    constructor(
-        address _usdcLocal,
-        address _socketVault
-    )
+    constructor(address _usdcLocal, address _socketVault)
         payable
         LyraForwarderBase(_usdcLocal, _socketVault)
         ERC2771Context(0xd8253782c45a12053594b9deB72d8e8aB2Fca54c)
@@ -35,9 +32,12 @@ contract LyraSponsoredForwarder is LyraForwarderBase, ERC2771Context {
      * @param connector     Socket Connector
      * @param authData      Data and signatures for receiveWithAuthorization
      */
-    function depositUSDCSocketBridge(bool isScwWallet, uint32 minGasLimit, address connector, ReceiveWithAuthData calldata authData)
-        external
-    {
+    function depositUSDCSocketBridge(
+        bool isScwWallet,
+        uint32 minGasLimit,
+        address connector,
+        ReceiveWithAuthData calldata authData
+    ) external {
         address msgSender = _msgSender();
 
         IERC3009(usdcLocal).receiveWithAuthorization(
