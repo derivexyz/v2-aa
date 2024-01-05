@@ -13,7 +13,7 @@ import {ILightAccountFactory} from "../interfaces/ILightAccountFactory.sol";
 
 /**
  * @title  LyraPermitBridgeForwarder
- * @notice Use this contract to allow gasless transactions, users pay gelato relayers in USDC
+ * @notice Use this contract to allow gasless transactions, users pay gelato relayers in tokens like (USDC.e)
  *
  * @dev    All functions are guarded with onlyGelatoRelayERC2771. They should only be called by GELATO_RELAY_ERC2771 or GELATO_RELAY_CONCURRENT_ERC2771
  * @dev    Someone need to fund this contract with ETH to use Socket Bridge
@@ -23,7 +23,7 @@ contract LyraPermitBridgeForwarder is Ownable, GelatoRelayContextERC2771 {
     address public immutable socketVault;
 
     ///@dev local token address. This token must support permit
-    address public immutable usdcLocal;
+    address public immutable token;
 
     ///@dev Light Account factory address.
     ///     See this script for more info https://github.com/alchemyplatform/light-account/blob/main/script/Deploy_LightAccountFactory.s.sol
@@ -37,8 +37,8 @@ contract LyraPermitBridgeForwarder is Ownable, GelatoRelayContextERC2771 {
         bytes32 s;
     }
 
-    constructor(address _usdcLocal, address _socketVault) payable GelatoRelayContextERC2771() {
-        usdcLocal = _usdcLocal;
+    constructor(address _token, address _socketVault) payable GelatoRelayContextERC2771() {
+        token = _token;
         socketVault = _socketVault;
     }
 
@@ -60,11 +60,12 @@ contract LyraPermitBridgeForwarder is Ownable, GelatoRelayContextERC2771 {
     ) external payable onlyGelatoRelayERC2771 {
         address msgSender = _getMsgSender();
 
-        try IERC20Permit(usdcLocal).permit(
+        // use try catch so that others cannot grief by submitting the same permit data before this tx
+        try IERC20Permit(token).permit(
             msgSender, address(this), permitData.value, permitData.deadline, permitData.v, permitData.r, permitData.s
         ) {} catch {}
 
-        IERC20(usdcLocal).transferFrom(msgSender, address(this), permitData.value);
+        IERC20(token).transferFrom(msgSender, address(this), permitData.value);
 
         // Pay gelato fee, reverts if exceeded max fee
         _transferRelayFeeCapped(maxFeeToken);
