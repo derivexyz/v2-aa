@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable, Context} from "@openzeppelin/contracts/access/Ownable.sol";
 
-import {GelatoRelayContextERC2771} from "../../lib/relay-context-contracts/contracts/GelatoRelayContextERC2771.sol";
+import {ERC2771Context} from "../../lib/relay-context-contracts/contracts/vendor/ERC2771Context.sol";
 
 import {ISocketVault} from "../interfaces/ISocketVault.sol";
 
@@ -12,13 +12,11 @@ import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC2
 import {ILightAccountFactory} from "../interfaces/ILightAccountFactory.sol";
 
 /**
- * @title  LyraPermitBridgeForwarder
- * @notice Use this contract to allow gasless transactions, users pay gelato relayers in tokens like (USDC.e)
+ * @title  LyraPermitSponsoredForwarder
+ * @notice Use this contract to allow gasless transactions, we sponsor the gas for users
  *
- * @dev    All functions are guarded with onlyGelatoRelayERC2771. They should only be called by GELATO_RELAY_ERC2771 or GELATO_RELAY_CONCURRENT_ERC2771
- * @dev    Someone need to fund this contract with ETH to use Socket Bridge
  */
-contract LyraPermitBridgeForwarder is Ownable, GelatoRelayContextERC2771 {
+contract LyraPermitSponsoredForwarder is Ownable, ERC2771Context {
     ///@dev SocketVault address.
     address public immutable socketVault;
 
@@ -26,7 +24,6 @@ contract LyraPermitBridgeForwarder is Ownable, GelatoRelayContextERC2771 {
     address public immutable token;
 
     ///@dev Light Account factory address.
-    ///     See this script for more info https://github.com/alchemyplatform/light-account/blob/main/script/Deploy_LightAccountFactory.s.sol
     address public constant lightAccountFactory = 0x000000893A26168158fbeaDD9335Be5bC96592E2;
 
     struct PermitData {
@@ -37,7 +34,7 @@ contract LyraPermitBridgeForwarder is Ownable, GelatoRelayContextERC2771 {
         bytes32 s;
     }
 
-    constructor(address _token, address _socketVault) payable GelatoRelayContextERC2771() {
+    constructor(address _token, address _socketVault) payable ERC2771Context(0xd8253782c45a12053594b9deB72d8e8aB2Fca54c) {
         token = _token;
         socketVault = _socketVault;
     }
@@ -45,20 +42,18 @@ contract LyraPermitBridgeForwarder is Ownable, GelatoRelayContextERC2771 {
     /**
      * @notice  Deposit USDC to L2 through socket bridge. Gas is paid in token
      * @dev     Users never have to approve USDC to this contract.
-     * @param maxFeeToken   Maximum fee in that user is willing to pay
      * @param isScwWallet   True if user wants to deposit to default LightAccount on L2. False if the user wants to deposit to its own L2 address
      * @param minGasLimit   Minimum gas limit for the L2 execution
      * @param connector     Socket Connector
      * @param permitData   Data and signatures for permit
      */
     function depositGasless(
-        uint256 maxFeeToken,
         bool isScwWallet,
         uint32 minGasLimit,
         address connector,
         PermitData calldata permitData
-    ) external payable onlyGelatoRelayERC2771 {
-        address msgSender = _getMsgSender();
+    ) external payable {
+        address msgSender = _msgSender();
 
         // use try catch so that others cannot grief by submitting the same permit data before this tx
         try IERC20Permit(token).permit(
@@ -67,16 +62,11 @@ contract LyraPermitBridgeForwarder is Ownable, GelatoRelayContextERC2771 {
 
         IERC20(token).transferFrom(msgSender, address(this), permitData.value);
 
-        // Pay gelato fee, reverts if exceeded max fee
-        _transferRelayFeeCapped(maxFeeToken);
-
-        uint256 remaining = permitData.value - _getFee();
-
         uint256 socketFee = ISocketVault(socketVault).getMinFees(connector, minGasLimit);
 
         // Pay socket fee and deposit to Lyra Chain
         ISocketVault(socketVault).depositToAppChain{value: socketFee}(
-            _getL2Receiver(msgSender, isScwWallet), remaining, minGasLimit, connector
+            _getL2Receiver(msgSender, isScwWallet), permitData.value, minGasLimit, connector
         );
     }
 
@@ -96,6 +86,14 @@ contract LyraPermitBridgeForwarder is Ownable, GelatoRelayContextERC2771 {
      */
     function withdrawETH() external onlyOwner {
         payable(msg.sender).transfer(address(this).balance);
+    }
+
+    function _msgSender() internal view override(Context, ERC2771Context) returns (address sender) {
+        return ERC2771Context._msgSender();
+    }
+
+    function _msgData() internal view override(Context, ERC2771Context) returns (bytes calldata) {
+        return ERC2771Context._msgData();
     }
 
     receive() external payable {}
