@@ -265,7 +265,6 @@ interface IERC20 {
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 pragma solidity ^0.8.0;
 
 abstract contract AbstractFiatTokenV1 is IERC20 {
@@ -385,7 +384,6 @@ contract Ownable {
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 pragma solidity ^0.8.0;
 
 /**
@@ -474,7 +472,6 @@ contract Pausable is Ownable {
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 pragma solidity ^0.8.0;
 
 /**
@@ -563,7 +560,6 @@ contract Blacklistable is Ownable {
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 pragma solidity ^0.8.0;
 
 /**
@@ -1100,7 +1096,6 @@ library SafeERC20 {
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 pragma solidity ^0.8.0;
 
 contract Rescuable is Ownable {
@@ -1170,7 +1165,6 @@ contract Rescuable is Ownable {
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 pragma solidity ^0.8.0;
 
 /**
@@ -1202,7 +1196,6 @@ contract FiatTokenV1_1 is FiatTokenV1, Rescuable {}
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 pragma solidity ^0.8.0;
 
 abstract contract AbstractFiatTokenV2 is AbstractFiatTokenV1 {
@@ -1235,7 +1228,6 @@ abstract contract AbstractFiatTokenV2 is AbstractFiatTokenV1 {
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 pragma solidity ^0.8.0;
 
 /**
@@ -1302,7 +1294,6 @@ library ECRecover {
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 pragma solidity ^0.8.0;
 
 /**
@@ -1375,7 +1366,6 @@ library EIP712 {
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 pragma solidity ^0.8.0;
 
 /**
@@ -1411,7 +1401,6 @@ contract EIP712Domain {
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 pragma solidity ^0.8.0;
 
 /**
@@ -1599,7 +1588,6 @@ abstract contract EIP3009 is AbstractFiatTokenV2, EIP712Domain {
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 pragma solidity ^0.8.0;
 
 /**
@@ -1666,7 +1654,6 @@ abstract contract EIP2612 is AbstractFiatTokenV2, EIP712Domain {
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 pragma solidity ^0.8.0;
 
 /**
@@ -1855,7 +1842,6 @@ contract FiatTokenV2 is FiatTokenV1_1, EIP3009, EIP2612 {
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 pragma solidity ^0.8.0;
 
 // solhint-disable func-name-mixedcase

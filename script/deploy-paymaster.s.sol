@@ -8,8 +8,9 @@ contract DeployPaymaster is Script {
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
-        VerifyingPaymasterFix paymaster =
-        new VerifyingPaymasterFix(IEntryPoint(0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789), vm.addr(deployerPrivateKey));
+        VerifyingPaymasterFix paymaster = new VerifyingPaymasterFix(
+            IEntryPoint(0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789), vm.addr(deployerPrivateKey)
+        );
         console2.log("VerifyingPaymasterFix deployed at: ", address(paymaster));
         vm.stopBroadcast();
     }
