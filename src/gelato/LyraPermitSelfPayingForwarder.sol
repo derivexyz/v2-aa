@@ -40,6 +40,8 @@ contract LyraPermitSelfPayingForwarder is Ownable, GelatoRelayContextERC2771 {
     constructor(address _token, address _socketVault) payable GelatoRelayContextERC2771() {
         token = _token;
         socketVault = _socketVault;
+
+        IERC20(_token).approve(_socketVault, type(uint256).max);
     }
 
     /**

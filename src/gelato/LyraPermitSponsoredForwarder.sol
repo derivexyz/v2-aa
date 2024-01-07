@@ -34,9 +34,14 @@ contract LyraPermitSponsoredForwarder is Ownable, ERC2771Context {
         bytes32 s;
     }
 
-    constructor(address _token, address _socketVault) payable ERC2771Context(0xd8253782c45a12053594b9deB72d8e8aB2Fca54c) {
+    constructor(address _token, address _socketVault)
+        payable
+        ERC2771Context(0xd8253782c45a12053594b9deB72d8e8aB2Fca54c)
+    {
         token = _token;
         socketVault = _socketVault;
+
+        IERC20(_token).approve(_socketVault, type(uint256).max);
     }
 
     /**
@@ -47,12 +52,10 @@ contract LyraPermitSponsoredForwarder is Ownable, ERC2771Context {
      * @param connector     Socket Connector
      * @param permitData   Data and signatures for permit
      */
-    function depositGasless(
-        bool isScwWallet,
-        uint32 minGasLimit,
-        address connector,
-        PermitData calldata permitData
-    ) external payable {
+    function depositGasless(bool isScwWallet, uint32 minGasLimit, address connector, PermitData calldata permitData)
+        external
+        payable
+    {
         address msgSender = _msgSender();
 
         // use try catch so that others cannot grief by submitting the same permit data before this tx
