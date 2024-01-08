@@ -13,18 +13,12 @@ import {ILightAccountFactory} from "../interfaces/ILightAccountFactory.sol";
 
 /**
  * @title  LyraPermitSelfPayingForwarder
- * @notice Use this contract to allow gasless transactions, users pay gelato relayers in tokens like (USDC.e)
+ * @notice Use this contract to allow gasless transactions, users pay gelato relayers in tokens that supports permit
  *
  * @dev    All functions are guarded with onlyGelatoRelayERC2771. They should only be called by GELATO_RELAY_ERC2771 or GELATO_RELAY_CONCURRENT_ERC2771
  * @dev    Someone need to fund this contract with ETH to use Socket Bridge
  */
 contract LyraPermitSelfPayingForwarder is Ownable, GelatoRelayContextERC2771 {
-    ///@dev SocketVault address.
-    address public immutable socketVault;
-
-    ///@dev local token address. This token must support permit
-    address public immutable token;
-
     ///@dev Light Account factory address.
     ///     See this script for more info https://github.com/alchemyplatform/light-account/blob/main/script/Deploy_LightAccountFactory.s.sol
     address public constant lightAccountFactory = 0x000000893A26168158fbeaDD9335Be5bC96592E2;
@@ -37,12 +31,7 @@ contract LyraPermitSelfPayingForwarder is Ownable, GelatoRelayContextERC2771 {
         bytes32 s;
     }
 
-    constructor(address _token, address _socketVault) payable GelatoRelayContextERC2771() {
-        token = _token;
-        socketVault = _socketVault;
-
-        IERC20(_token).approve(_socketVault, type(uint256).max);
-    }
+    constructor() payable GelatoRelayContextERC2771() {}
 
     /**
      * @notice  Deposit USDC to L2 through socket bridge. Gas is paid in token
@@ -54,6 +43,8 @@ contract LyraPermitSelfPayingForwarder is Ownable, GelatoRelayContextERC2771 {
      * @param permitData   Data and signatures for permit
      */
     function depositGasless(
+        address token,
+        address socketVault,
         uint256 maxFeeToken,
         bool isScwWallet,
         uint32 minGasLimit,
@@ -68,6 +59,7 @@ contract LyraPermitSelfPayingForwarder is Ownable, GelatoRelayContextERC2771 {
         ) {} catch {}
 
         IERC20(token).transferFrom(msgSender, address(this), permitData.value);
+        IERC20(token).approve(socketVault, permitData.value);
 
         // Pay gelato fee, reverts if exceeded max fee
         _transferRelayFeeCapped(maxFeeToken);

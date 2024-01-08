@@ -13,16 +13,11 @@ import {ILightAccountFactory} from "../interfaces/ILightAccountFactory.sol";
 
 /**
  * @title  LyraPermitSponsoredForwarder
- * @notice Use this contract to allow gasless transactions, we sponsor the gas for users
+ * @notice Use this contract for gasless deposit onto Lyra chain.
+ * @dev    It only works with token with `permit` functionality
  *
  */
 contract LyraPermitSponsoredForwarder is Ownable, ERC2771Context {
-    ///@dev SocketVault address.
-    address public immutable socketVault;
-
-    ///@dev local token address. This token must support permit
-    address public immutable token;
-
     ///@dev Light Account factory address.
     address public constant lightAccountFactory = 0x000000893A26168158fbeaDD9335Be5bC96592E2;
 
@@ -34,15 +29,7 @@ contract LyraPermitSponsoredForwarder is Ownable, ERC2771Context {
         bytes32 s;
     }
 
-    constructor(address _token, address _socketVault)
-        payable
-        ERC2771Context(0xd8253782c45a12053594b9deB72d8e8aB2Fca54c)
-    {
-        token = _token;
-        socketVault = _socketVault;
-
-        IERC20(_token).approve(_socketVault, type(uint256).max);
-    }
+    constructor() payable ERC2771Context(0xd8253782c45a12053594b9deB72d8e8aB2Fca54c) {}
 
     /**
      * @notice  Deposit USDC to L2 through socket bridge. Gas is paid in token
@@ -52,10 +39,14 @@ contract LyraPermitSponsoredForwarder is Ownable, ERC2771Context {
      * @param connector     Socket Connector
      * @param permitData   Data and signatures for permit
      */
-    function depositGasless(bool isScwWallet, uint32 minGasLimit, address connector, PermitData calldata permitData)
-        external
-        payable
-    {
+    function depositGasless(
+        address token,
+        address socketVault,
+        bool isScwWallet,
+        uint32 minGasLimit,
+        address connector,
+        PermitData calldata permitData
+    ) external payable {
         address msgSender = _msgSender();
 
         // use try catch so that others cannot grief by submitting the same permit data before this tx
@@ -64,6 +55,7 @@ contract LyraPermitSponsoredForwarder is Ownable, ERC2771Context {
         ) {} catch {}
 
         IERC20(token).transferFrom(msgSender, address(this), permitData.value);
+        IERC20(token).approve(socketVault, permitData.value);
 
         uint256 socketFee = ISocketVault(socketVault).getMinFees(connector, minGasLimit);
 
