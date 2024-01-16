@@ -7,7 +7,6 @@ import {IFiatController} from "../interfaces/IFiatController.sol";
 
 /**
  * @title  LyraWithdrawWrapper
- * @notice Shared logic for both self-paying and sponsored forwarder
  */
 contract LyraWithdrawWrapper is Ownable {
     ///@dev L2 USDC address.
