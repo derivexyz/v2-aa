@@ -76,7 +76,6 @@ contract FORK_LYRA_LyraWithdrawalV2Test is Test {
     }
 
     function test_fork_RevertIf_tokenMismatch() public onlyLyra {
-        // _mintLyraUSDC(address(wrapper), 1000e6);
         uint256 amount = 100e6;
 
         vm.startPrank(alice);
