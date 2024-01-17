@@ -65,7 +65,7 @@ Gasless forwarders are used to make sure users only with ERC20 can deposit to Ly
 | Optimism Sepolia | - | [0x1480Cfe30213b134f757757d328949AAe406eA33](https://sepolia-optimistic.etherscan.io/address/0x1480Cfe30213b134f757757d328949AAe406eA33#code) |
 
 
-* On Optimism, on USDC has `permit` now, but all other ERC20s can potentially use these contracts to forward deposits
+* On Optimism, only USDC has `permit` now, but other ERC20s can potentially use these contracts to achieve gasless deposit if they have permit.
 
 
 ## Deposit Helper (`LyraDepositWrapper`)
