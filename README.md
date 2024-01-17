@@ -68,7 +68,9 @@ Gasless forwarders are used to make sure users only with ERC20 can deposit to Ly
 * On Optimism, only USDC has `permit` now, but other ERC20s can potentially use these contracts to achieve gasless deposit if they have permit.
 
 
-## Deposit Helper (`LyraDepositWrapper`)
+## Deposit Helper 
+
+### `LyraDepositWrapper`
 
 Help wrapping ETH and deposit with socket vault in one go. Can also be used with ERC20 deposits to calculate L2 address
 
@@ -89,9 +91,11 @@ Help wrapping ETH and deposit with socket vault in one go. Can also be used with
 
 
 
-## Withdraw Helper (`WithdrawHelperV2 `) 
+## Withdraw Helper 
 
-withdraw all ERC20s
+### `WithdrawHelperV2`
+
+withdraw ERC20s from Lyra Chain back to Mainnet / L2s, paid socket fee in token.
 
 | Network | Address | 
 | -------- | -------- | 
