@@ -88,3 +88,12 @@ Help wrapping ETH and deposit with socket vault in one go. Can also be used with
 | Arbi-Sepolia     | [0x5708bDE1c5e49b62cfd46D07b5cd3c898930Ef23](https://sepolia.arbiscan.io/address/0x5708bDE1c5e49b62cfd46D07b5cd3c898930Ef23#readContract)     |
 
 
+
+## Withdraw Helper (`WithdrawHelperV2 `) 
+
+withdraw all ERC20s
+
+| Network | Address | 
+| -------- | -------- | 
+| Lyra     |   [0x0E4e5779F633F823d007f3C27fa6feFb22B45316](https://explorer.lyra.finance/address/0x0E4e5779F633F823d007f3C27fa6feFb22B45316)   |
+| Lyra Testnet    | [0xD7080B2399B88c3520F8F793f4758D0C6ccDf48a](https://explorerl2new-prod-testnet-0eakp60405.t.conduit.xyz/address/0xD7080B2399B88c3520F8F793f4758D0C6ccDf48a)  |
