@@ -78,9 +78,9 @@ Help wrapping ETH and deposit with socket vault in one go. Can also be used with
 ### Mainnet
 | Network | Address | 
 | -------- | -------- | 
-| Ethereum     | -    |
+| Ethereum     | [0x18a0f3F937DD0FA150d152375aE5A4E941d1527b](https://etherscan.io/address/0x18a0f3f937dd0fa150d152375ae5a4e941d1527b#code)    |
 | Optimism     | [0xC65005131Cfdf06622b99E8E17f72Cf694b586cC](https://optimistic.etherscan.io/address/0xC65005131Cfdf06622b99E8E17f72Cf694b586cC#code)     |
-| Arbitrum     | -     |
+| Arbitrum     |  [0x076BB6117750e80AD570D98891B68da86C203A88](https://arbiscan.io/address/0x076BB6117750e80AD570D98891B68da86C203A88#readContract)    |
 
 ### Testnet
 | Network | Address | 
