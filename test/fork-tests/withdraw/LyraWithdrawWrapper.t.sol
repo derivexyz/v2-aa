@@ -9,7 +9,7 @@ import {USDC} from "src/mocks/USDC.sol";
 /**
  * forge test --fork-url https://rpc.lyra.finance -vvv
  */
-contract FORK_LyraWithdrawalTest is Test {
+contract FORK_LYRA_LyraWithdrawalTest is Test {
     address public immutable usdc = address(0x6879287835A86F50f784313dBEd5E5cCC5bb8481);
 
     address public immutable controller = address(0x4C9faD010D8be90Aba505c85eacc483dFf9b8Fa9);

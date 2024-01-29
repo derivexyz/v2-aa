@@ -21,5 +21,8 @@ jobs:
         with:
           version: nightly
       
-      - name: Run tests
-        run: forge test -vvv --fork-url https://rpc.lyra.finance
+      - name: Run lyra fork tests
+        run: forge test --match-contract FORK_LYRA_ --fork-url https://rpc.lyra.finance
+
+      - name: Run Mainnet fork tests
+        run: forge test --match-contract FORK_MAINNET_ --fork-url https://mainnet.infura.io/v3/743507feddbd4a8088614092511076bc -vvv

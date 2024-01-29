@@ -9,13 +9,15 @@ import {USDC} from "src/mocks/USDC.sol";
 /**
  * forge test --fork-url https://rpc.lyra.finance -vvv
  */
-contract FORK_LyraWithdrawalV2Test is Test {
+contract FORK_LYRA_LyraWithdrawalV2Test is Test {
     address public usdc = address(0x6879287835A86F50f784313dBEd5E5cCC5bb8481);
 
     // withdraw as official USDC
     address public usdcController = address(0x4C9faD010D8be90Aba505c85eacc483dFf9b8Fa9);
     address public usdc_Mainnet_Connector = address(0x1281C1464449DB73bdAa30928BCC63Dc25D8D187);
-    address public usdc_Arbi_Connector = address(0xBdE9e687F3A23Ebbc972c58D510dfc1f58Fb35EF); // as native USDC
+
+    // withdraw as USDC.e
+    address public usdc_Arbi_Connector = address(0xFc1e42b0C3Ff8d69FBe639a6a674fF5f0FcE778D);
 
     // wbtc asset
     address public wBTC = address(0x9b80ab732a6F1030326Af0014f106E12C4Db18EC);
@@ -74,7 +76,6 @@ contract FORK_LyraWithdrawalV2Test is Test {
     }
 
     function test_fork_RevertIf_tokenMismatch() public onlyLyra {
-        // _mintLyraUSDC(address(wrapper), 1000e6);
         uint256 amount = 100e6;
 
         vm.startPrank(alice);
