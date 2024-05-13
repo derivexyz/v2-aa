@@ -8,7 +8,7 @@ import {IERC20} from "../../../lib/openzeppelin-contracts/contracts/token/ERC20/
 import {IWETH} from "src/interfaces/IWETH.sol";
 
 /**
- * forge test --fork-url https://mainnet.infura.io/v3/${INFURA_PROJECT_ID} -vvv
+ * forge test --fork-url https://mainnet.infura.io/v3/b3801473275f4a0a846ea7fe5a629349 -vvv ${INFURA_PROJECT_ID} -vvv
  */
 contract FORK_MAINNET_LyraDepositWrapper is Test {
     address public weth = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
