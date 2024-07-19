@@ -17,9 +17,11 @@ import {ILightAccountFactory} from "../interfaces/ILightAccountFactory.sol";
  * @dev    It only works with token with `permit` functionality
  *
  */
-contract LyraPermitSponsoredForwarder is Ownable, ERC2771Context {
+contract LyraPermitSponsoredForwarder2 is Ownable, ERC2771Context {
     ///@dev Light Account factory address.
     address public constant lightAccountFactory = 0x000000893A26168158fbeaDD9335Be5bC96592E2;
+
+    mapping(address => bool) wlVault;
 
     struct PermitData {
         uint256 value;
@@ -30,6 +32,10 @@ contract LyraPermitSponsoredForwarder is Ownable, ERC2771Context {
     }
 
     constructor() payable ERC2771Context(0xd8253782c45a12053594b9deB72d8e8aB2Fca54c) {}
+
+    function setWhitelistVault(address vault, bool isWhitelisted) external onlyOwner {
+        wlVault[vault] = isWhitelisted;
+    }
 
     /**
      * @notice  Deposit USDC to L2 through socket bridge. Gas is paid in token
@@ -47,6 +53,8 @@ contract LyraPermitSponsoredForwarder is Ownable, ERC2771Context {
         address connector,
         PermitData calldata permitData
     ) external payable {
+        require(wlVault[socketVault], "Vault not whitelisted");
+
         address msgSender = _msgSender();
 
         // use try catch so that others cannot grief by submitting the same permit data before this tx
