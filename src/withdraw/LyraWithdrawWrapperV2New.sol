@@ -43,7 +43,7 @@ contract LyraWithdrawWrapperV2New is Ownable {
     mapping(address token => uint256) public staticPrice;
     mapping(address => ControllerType) public controllerType;
     address public feeRecipient;
-    uint public payloadSize = 161;
+    uint256 public payloadSize = 161;
 
     constructor() payable {}
 
@@ -58,7 +58,7 @@ contract LyraWithdrawWrapperV2New is Ownable {
         feeRecipient = newRecipient;
     }
 
-    function setPayloadSize(uint newSize) external onlyOwner {
+    function setPayloadSize(uint256 newSize) external onlyOwner {
         payloadSize = newSize;
     }
 
@@ -79,7 +79,7 @@ contract LyraWithdrawWrapperV2New is Ownable {
 
     function setStaticRates(address[] memory tokens, uint256[] memory rates) external onlyOwner {
         require(tokens.length == rates.length, "Array length mismatch");
-        for (uint i = 0; i < tokens.length; i++) {
+        for (uint256 i = 0; i < tokens.length; i++) {
             staticPrice[tokens[i]] = rates[i];
         }
     }
