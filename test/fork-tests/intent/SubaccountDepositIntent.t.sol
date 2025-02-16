@@ -11,7 +11,7 @@ import {ISubaccounts} from "./interfaces/ISubaccounts.sol";
  * forge test --fork-url https://rpc.lyra.finance -vvv
  */
 
-contract FORK_DERIVE_MAINNET_SubaccountDepositIntent is Test {
+contract FORK_LYRA_SubaccountDepositIntent is Test {
     // ERC20 token on derive mainnet
     address public rsETH = address(0xc47e2E800a9184cFbD274AC1eeCcCDF942715dB7);
 
