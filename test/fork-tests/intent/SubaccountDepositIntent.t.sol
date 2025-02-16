@@ -65,5 +65,14 @@ contract FORK_DERIVE_MAINNET_SubaccountDepositIntent is Test {
         assertEq(subaccountBalanceAfter, subaccountBalanceBefore + 10 ether);
     }
 
+    function testCannotDepositToInvalidSubaccount() public onlyDeriveMainnet {
+        uint256 invalidSubaccount = 100;
+
+        vm.startPrank(executor);
+        vm.expectRevert(SubaccountDepositIntent.SubaccountOwnerMismatch.selector);
+        depositIntent.executeDepositIntent(user, invalidSubaccount, rsETHAsset, 10 ether);
+        vm.stopPrank();
+    }
+
     receive() external payable {}
 }
