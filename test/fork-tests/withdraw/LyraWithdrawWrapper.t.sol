@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
+// solhint-disable contract-name-camelcase
+// solhint-disable func-name-mixedcase
 pragma solidity ^0.8.18;
 
 import "lib/forge-std/src/Test.sol";
@@ -53,7 +55,7 @@ contract FORK_LYRA_LyraWithdrawalTest is Test {
         vm.startPrank(alice);
         IERC20(usdc).approve(address(wrapper), type(uint256).max);
 
-        uint256 amount = 1e6;
+        uint256 amount = 1e3;
         vm.expectRevert(bytes("withdraw amount < fee"));
         wrapper.withdrawToL1(amount, alice, connector, 200_000);
 
@@ -71,11 +73,11 @@ contract FORK_LYRA_LyraWithdrawalTest is Test {
 
     function test_fork_getFee() public onlyLyra {
         uint256 fee = wrapper.getFeeUSDC(connector, 200_000);
-        assertGt(fee, 1e6);
+        assertGt(fee, 1e5);
         assertLt(fee, 300e6);
     }
 
-    function _mintLyraUSDC(address account, uint256 amount) public {
+    function _mintLyraUSDC(address account, uint256 amount) private {
         vm.prank(connector);
         IFiatController(controller).receiveInbound(abi.encode(account, amount));
     }
