@@ -16,7 +16,7 @@ contract SubaccountDepositIntent is IntentExecutorBase {
 
     error SubaccountOwnerMismatch();
 
-    event RouteDeposit(uint256 indexed subaccountId, address indexed scw, address indexed token, uint256 amount);
+    event IntentDeposit(uint256 indexed subaccountId, address indexed scw, address indexed token, uint256 amount);
 
     constructor(IERC721 _subaccounts) {
         SUBACCOUNTS = _subaccounts;
@@ -42,7 +42,7 @@ contract SubaccountDepositIntent is IntentExecutorBase {
 
         IERC20BasedAsset(deriveAsset).deposit(subaccountId, amount);
 
-        emit RouteDeposit(subaccountId, scw, address(token), amount);
+        emit IntentDeposit(subaccountId, scw, address(token), amount);
     }
 
     /**
