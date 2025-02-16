@@ -11,7 +11,6 @@ import {IERC20BasedAsset} from "../interfaces/derive/IERC20BasedAsset.sol";
  * @notice A shared contract that allows authorized EOAs to execute intents
  */
 contract IntentExecutorBase is Ownable {
-    
     /**
      * @notice Whether the account is an intent executor
      */
@@ -26,7 +25,7 @@ contract IntentExecutorBase is Ownable {
      * @notice The event emitted when an intent executor is set
      */
     event IntentExecutorSet(address indexed executor, bool isIntentExecutor);
-    
+
     /**
      * @notice Set an EOA as an intent executor
      * @param _executor The EOA address
@@ -48,5 +47,5 @@ contract IntentExecutorBase is Ownable {
     modifier onlyIntentExecutor() {
         _verifyIntentExecutor();
         _;
-    }    
+    }
 }

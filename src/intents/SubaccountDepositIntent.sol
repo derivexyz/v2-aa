@@ -12,7 +12,6 @@ import {IERC20BasedAsset} from "../interfaces/derive/IERC20BasedAsset.sol";
  * @dev    Users who wish to have the auto-deposit feature need to approve this contract to spend their tokens
  */
 contract SubaccountDepositIntent is IntentExecutorBase {
-    
     IERC721 public immutable SUBACCOUNTS;
 
     error SubaccountOwnerMismatch();
@@ -30,7 +29,10 @@ contract SubaccountDepositIntent is IntentExecutorBase {
      * @param deriveAsset The derive v2 asset address (IAsset)
      * @param amount The amount of tokens to route
      */
-    function executeDepositIntent(address scw, uint256 subaccountId, address deriveAsset, uint256 amount) external onlyIntentExecutor {
+    function executeDepositIntent(address scw, uint256 subaccountId, address deriveAsset, uint256 amount)
+        external
+        onlyIntentExecutor
+    {
         // Can only deposit to subaccounts that are owned by the SCW
         _verifySubaccountOwner(subaccountId, scw);
 

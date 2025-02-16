@@ -10,8 +10,8 @@ import {ISubaccounts} from "./interfaces/ISubaccounts.sol";
 /**
  * forge test --fork-url https://rpc.lyra.finance -vvv
  */
-contract FORK_DERIVE_MAINNET_SubaccountDepositIntent is Test {
 
+contract FORK_DERIVE_MAINNET_SubaccountDepositIntent is Test {
     // ERC20 token on derive mainnet
     address public rsETH = address(0xc47e2E800a9184cFbD274AC1eeCcCDF942715dB7);
 
@@ -20,7 +20,7 @@ contract FORK_DERIVE_MAINNET_SubaccountDepositIntent is Test {
 
     // SubaccountDepositIntent on derive mainnet
     ISubaccounts public subaccounts = ISubaccounts(0xE7603DF191D699d8BD9891b821347dbAb889E5a5);
-    
+
     // Mock light account address: owner of Subaccount 1
     uint256 public subaccountId = 1;
     address public user = address(0x8dC92fB0e1C1F1Def6e424E50aaA66dbB124eb54);
@@ -60,7 +60,7 @@ contract FORK_DERIVE_MAINNET_SubaccountDepositIntent is Test {
 
         uint256 erc20BalanceAfter = IERC20(rsETH).balanceOf(user);
         uint256 subaccountBalanceAfter = subaccounts.getBalance(subaccountId, rsETHAsset, 0);
-        
+
         assertEq(erc20BalanceAfter, erc20BalanceBefore - 10 ether);
         assertEq(subaccountBalanceAfter, subaccountBalanceBefore + 10 ether);
     }
