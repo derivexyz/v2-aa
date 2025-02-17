@@ -46,7 +46,7 @@ contract FORK_LYRA_StakeDRVIntent is Test {
         IERC20(drv).approve(address(stakeIntent), type(uint256).max);
     }
 
-    function testStakeIntent_DRV() public onlyDeriveMainnet {
+    function test_StakeIntent_DRV() public onlyDeriveMainnet {
         uint256 erc20BalanceBefore = IERC20(drv).balanceOf(scw);
         uint256 stakedDRVBalanceBefore = IERC20(stakedDRV).balanceOf(scw);
 
@@ -61,7 +61,7 @@ contract FORK_LYRA_StakeDRVIntent is Test {
         assertEq(stakedDRVBalanceAfter, stakedDRVBalanceBefore + 1 ether);
     }
 
-    function testCannotTriggerByNonExecutor() public onlyDeriveMainnet {
+    function test_RevertIf_TriggerByNonExecutor() public onlyDeriveMainnet {
         address nonExecutor = address(0x123);
         vm.startPrank(nonExecutor);
         vm.expectRevert(IntentExecutorBase.NotIntentExecutor.selector);

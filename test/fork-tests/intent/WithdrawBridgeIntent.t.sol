@@ -25,9 +25,13 @@ contract FORK_LYRA_WithdrawBridgeIntent is Test {
 
     // Socket withdraw wrapper
     ISocketWithdrawWrapper public socketBridge = ISocketWithdrawWrapper(0xea8E683D8C46ff05B871822a00461995F93df800);
-    // Socket Parameters
+    
+    // Socket Parameters for testing
     address public weETHController = address(0xf58fF1Adc4d045e712a6D91e69d93B4092516659);
     address public weETHConnector = address(0x6Ee9b6ad1c97AdeeD071fd5f349cE65f91e43333);
+
+    // Connector with min fee set
+    address public weETHConnector2 = address(0xF6c475d2aB23d84e45AD3634C8956dCDe27315E0);
 
     // Mock scws
     address public scw = address(0x8dC92fB0e1C1F1Def6e424E50aaA66dbB124eb54);
@@ -61,7 +65,7 @@ contract FORK_LYRA_WithdrawBridgeIntent is Test {
         vm.stopPrank();
     }
 
-    function testWithdrawIntent_weETH() public onlyDeriveMainnet {
+    function test_WithdrawIntent_weETH() public onlyDeriveMainnet {
         // test we can withdraw to SCW owner
         address owner = ILightAccount(scw).owner();
 
@@ -77,7 +81,7 @@ contract FORK_LYRA_WithdrawBridgeIntent is Test {
         assertEq(erc20BalanceAfter, erc20BalanceBefore - 1 ether);
     }
 
-    function testWithdrawIntent_DRV() public onlyDeriveMainnet {
+    function test_WithdrawIntent_DRV() public onlyDeriveMainnet {
         uint256 erc20BalanceBefore = IERC20(drv).balanceOf(scw);
 
         uint256 maxFee = 10e18; // 10 DRV
@@ -91,13 +95,37 @@ contract FORK_LYRA_WithdrawBridgeIntent is Test {
         assertEq(erc20BalanceAfter, erc20BalanceBefore - 10 ether);
     }
 
-    function testCannotTriggerByNonExecutor() public onlyDeriveMainnet {
+    function test_RevertIf_TriggerByNonExecutor() public onlyDeriveMainnet {
         address nonExecutor = address(0x123);
         vm.startPrank(nonExecutor);
         vm.expectRevert(IntentExecutorBase.NotIntentExecutor.selector);
+
         bridgeIntent.executeWithdrawIntentSocket(
             scw, weETH, 1 ether, 0.1 ether, address(0), weETHController, weETHConnector, 200000
         );
+
+        vm.expectRevert(IntentExecutorBase.NotIntentExecutor.selector);
+        bridgeIntent.executeWithdrawIntentLZ(scw, drv, 10 ether, 10e18, address(0), 30184);
+        vm.stopPrank();
+    }
+
+    function test_RevertIf_FeeTooHigh() public onlyDeriveMainnet {
+        address owner = ILightAccount(scw).owner();
+        vm.startPrank(executor);
+
+        // DRV bridge
+        uint256 fee = oftBridge.getFeeInToken(drv, 10 ether, 30184);
+
+        vm.expectRevert(WithdrawBridgeIntent.FeeTooHigh.selector);
+        bridgeIntent.executeWithdrawIntentLZ(scw, drv, 10 ether, fee - 1, owner, 30184);
+
+        // weETH bridge
+        fee = socketBridge.getFeeInToken(weETH, weETHController, weETHConnector2, 200000);
+        vm.expectRevert(WithdrawBridgeIntent.FeeTooHigh.selector);
+        bridgeIntent.executeWithdrawIntentSocket(
+            scw, weETH, 1 ether, fee - 1, owner, weETHController, weETHConnector2, 200000
+        );
+
         vm.stopPrank();
     }
 

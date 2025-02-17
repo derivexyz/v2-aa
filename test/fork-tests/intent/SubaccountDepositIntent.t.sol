@@ -53,7 +53,7 @@ contract FORK_LYRA_SubaccountDepositIntent is Test {
         depositIntent.setIntentExecutor(executor, true);
     }
 
-    function testDepositIntent() public onlyDeriveMainnet {
+    function test_DepositIntent() public onlyDeriveMainnet {
         uint256 erc20BalanceBefore = IERC20(DAI).balanceOf(user);
         uint256 subaccountBalanceBefore = subaccounts.getBalance(subaccountId, DAIAsset, 0);
 
@@ -68,7 +68,7 @@ contract FORK_LYRA_SubaccountDepositIntent is Test {
         assertEq(subaccountBalanceAfter, subaccountBalanceBefore + 10 ether);
     }
 
-    function testCannotDepositToInvalidSubaccount() public onlyDeriveMainnet {
+    function test_RevertIf_DepositToInvalidSubaccount() public onlyDeriveMainnet {
         uint256 invalidSubaccount = 100;
 
         vm.startPrank(executor);
@@ -77,7 +77,7 @@ contract FORK_LYRA_SubaccountDepositIntent is Test {
         vm.stopPrank();
     }
 
-    function testCannotTriggerByNonExecutor() public onlyDeriveMainnet {
+    function test_RevertIf_TriggerByNonExecutor() public onlyDeriveMainnet {
         address nonExecutor = address(0x123);
         vm.startPrank(nonExecutor);
         vm.expectRevert(IntentExecutorBase.NotIntentExecutor.selector);
