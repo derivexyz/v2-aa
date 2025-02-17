@@ -5,6 +5,7 @@ import {IERC20} from "../../lib/openzeppelin-contracts/contracts/token/ERC20/IER
 import {IERC721} from "../../lib/openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
 import {IntentExecutorBase} from "./IntentExecutorBase.sol";
 import {IERC20BasedAsset} from "../interfaces/derive/IERC20BasedAsset.sol";
+import {IMatching} from "../interfaces/derive/IMatching.sol";
 
 /**
  * @title  SubaccountDepositIntent
@@ -12,14 +13,14 @@ import {IERC20BasedAsset} from "../interfaces/derive/IERC20BasedAsset.sol";
  * @dev    Users who wish to have the auto-deposit feature need to approve this contract to spend their tokens
  */
 contract SubaccountDepositIntent is IntentExecutorBase {
-    IERC721 public immutable SUBACCOUNTS;
+    IMatching public immutable MATCHING;
 
     error SubaccountOwnerMismatch();
 
     event IntentDeposit(uint256 indexed subaccountId, address indexed scw, address indexed token, uint256 amount);
 
-    constructor(IERC721 _subaccounts) {
-        SUBACCOUNTS = _subaccounts;
+    constructor(IMatching _matching) {
+        MATCHING = _matching;
     }
 
     /**
@@ -51,6 +52,6 @@ contract SubaccountDepositIntent is IntentExecutorBase {
      * @param scw The LightAccount address
      */
     function _verifySubaccountOwner(uint256 subaccountId, address scw) internal view {
-        if (SUBACCOUNTS.ownerOf(subaccountId) != scw) revert SubaccountOwnerMismatch();
+        if (MATCHING.subAccountToOwner(subaccountId) != scw) revert SubaccountOwnerMismatch();
     }
 }
