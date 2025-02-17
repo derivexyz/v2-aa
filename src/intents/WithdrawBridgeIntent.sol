@@ -48,11 +48,11 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
 
     /**
      * @notice Execute a withdraw intent to auto bridge tokens off Derive.
-     * @dev    The SCW must have approved this contract to spend the token, and set max fee for each token.
+     * @dev    The SCW must have approved this contract to spend the token.
      * @param scw The light account address
      * @param token The ERC20 token address
      * @param amount The amount of tokens to withdraw
-     * @param recipient The recipient address, must specify explictly as the SCW owner
+     * @param recipient The recipient address, must specify explicitly as the SCW owner
      * @param controller The Socket Controller address
      * @param connector The Socket Connector address
      */
@@ -69,7 +69,6 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
         IERC20(token).safeTransferFrom(scw, address(this), amount);
         IERC20(token).safeApprove(address(SOCKET_BRIDGE), amount);
 
-        // The auto execution can only be triggered if the fee is less than the max fee set by the user
         if (maxFee > 0) {
             uint256 feeInToken = SOCKET_BRIDGE.getFeeInToken(token, controller, connector, gasLimit);
             if (feeInToken > maxFee) revert FeeTooHigh();
@@ -87,12 +86,12 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
 
     /**
      * @notice Execute a withdraw intent to auto bridge tokens off Derive through LayerZero OFT Wrapper.
-     * @dev    The SCW must have approved this contract to spend the token, and set max fee for each token.
+     * @dev    The SCW must have approved this contract to spend the token.
      * @param scw The light account address
      * @param token The ERC20 token address
      * @param amount The amount of tokens to withdraw
      * @param maxFee The maximum fee for the withdraw bridge
-     * @param recipient The recipient address, must be a valid recipient or the owner of the SCW
+     * @param recipient The recipient address, must specify explicitly as the SCW owner
      * @param destEID The destination EID
      */
     function executeWithdrawIntentLZ(
@@ -106,7 +105,6 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
         IERC20(token).safeTransferFrom(scw, address(this), amount);
         IERC20(token).safeApprove(address(IOFT_BRIDGE), amount);
 
-        // The auto execution can only be triggered if the fee is less than the max fee set by the user
         if (maxFee > 0) {
             uint256 feeInToken = IOFT_BRIDGE.getFeeInToken(token, amount, destEID);
             if (feeInToken > maxFee) revert FeeTooHigh();
