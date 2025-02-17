@@ -7,6 +7,7 @@ pragma solidity ^0.8.18;
 import {Test} from "lib/forge-std/src/Test.sol";
 
 import {WithdrawBridgeIntent} from "src/intents/WithdrawBridgeIntent.sol";
+import {IntentExecutorBase} from "src/intents/IntentExecutorBase.sol";
 import {IERC20} from "../../../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import {ISocketWithdrawWrapper} from "src/interfaces/derive/ISocketWithdrawWrapper.sol";
 import {IOFTWithdrawWrapper} from "src/interfaces/derive/IOFTWithdrawWrapper.sol";
@@ -88,6 +89,16 @@ contract FORK_LYRA_WithdrawBridgeIntent is Test {
 
         uint256 erc20BalanceAfter = IERC20(drv).balanceOf(scw);
         assertEq(erc20BalanceAfter, erc20BalanceBefore - 10 ether);
+    }
+
+    function testCannotTriggerByNonExecutor() public onlyDeriveMainnet {
+        address nonExecutor = address(0x123);
+        vm.startPrank(nonExecutor);
+        vm.expectRevert(IntentExecutorBase.NotIntentExecutor.selector);
+        bridgeIntent.executeWithdrawIntentSocket(
+            scw, weETH, 1 ether, 0.1 ether, address(0), weETHController, weETHConnector, 200000
+        );
+        vm.stopPrank();
     }
 
     receive() external payable {}

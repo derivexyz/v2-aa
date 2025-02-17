@@ -7,6 +7,7 @@ pragma solidity ^0.8.18;
 import {Test} from "lib/forge-std/src/Test.sol";
 
 import {StakeDRVIntent} from "src/intents/StakeDRVIntent.sol";
+import {IntentExecutorBase} from "src/intents/IntentExecutorBase.sol";
 import {IERC20} from "../../../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import {IStakedDRV} from "src/interfaces/derive/IStakedDRV.sol";
 import {ILightAccount} from "src/interfaces/ILightAccount.sol";
@@ -58,6 +59,14 @@ contract FORK_LYRA_StakeDRVIntent is Test {
 
         uint256 stakedDRVBalanceAfter = IERC20(stakedDRV).balanceOf(scw);
         assertEq(stakedDRVBalanceAfter, stakedDRVBalanceBefore + 1 ether);
+    }
+
+    function testCannotTriggerByNonExecutor() public onlyDeriveMainnet {
+        address nonExecutor = address(0x123);
+        vm.startPrank(nonExecutor);
+        vm.expectRevert(IntentExecutorBase.NotIntentExecutor.selector);
+        stakeIntent.executeStakeDRVIntent(scw, 1 ether);
+        vm.stopPrank();
     }
 
     receive() external payable {}
