@@ -6,6 +6,7 @@ import {IntentExecutorBase} from "./IntentExecutorBase.sol";
 import {ILightAccount} from "../interfaces/ILightAccount.sol";
 import {ISocketWithdrawWrapper} from "../interfaces/derive/ISocketWithdrawWrapper.sol";
 import {IOFTWithdrawWrapper} from "../interfaces/derive/IOFTWithdrawWrapper.sol";
+import {SafeERC20} from "../../lib/openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
  * @title  WithdrawBridgeIntent
@@ -18,6 +19,8 @@ import {IOFTWithdrawWrapper} from "../interfaces/derive/IOFTWithdrawWrapper.sol"
  *         - Users rely on executors to provide a valid maxFee for each action to avoid being charged high fees by bridges.
  */
 contract WithdrawBridgeIntent is IntentExecutorBase {
+    using SafeERC20 for IERC20;
+
     ISocketWithdrawWrapper public immutable SOCKET_BRIDGE;
 
     IOFTWithdrawWrapper public immutable IOFT_BRIDGE;
@@ -63,8 +66,8 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
         address connector,
         uint256 gasLimit
     ) external onlyIntentExecutor {
-        IERC20(token).transferFrom(scw, address(this), amount);
-        IERC20(token).approve(address(SOCKET_BRIDGE), amount);
+        IERC20(token).safeTransferFrom(scw, address(this), amount);
+        IERC20(token).safeApprove(address(SOCKET_BRIDGE), amount);
 
         // The auto execution can only be triggered if the fee is less than the max fee set by the user
         if (maxFee > 0) {
@@ -100,8 +103,8 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
         address recipient,
         uint32 destEID
     ) external onlyIntentExecutor {
-        IERC20(token).transferFrom(scw, address(this), amount);
-        IERC20(token).approve(address(IOFT_BRIDGE), amount);
+        IERC20(token).safeTransferFrom(scw, address(this), amount);
+        IERC20(token).safeApprove(address(IOFT_BRIDGE), amount);
 
         // The auto execution can only be triggered if the fee is less than the max fee set by the user
         if (maxFee > 0) {

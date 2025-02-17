@@ -6,6 +6,7 @@ import {IERC721} from "../../lib/openzeppelin-contracts/contracts/token/ERC721/I
 import {IntentExecutorBase} from "./IntentExecutorBase.sol";
 import {IERC20BasedAsset} from "../interfaces/derive/IERC20BasedAsset.sol";
 import {IMatching} from "../interfaces/derive/IMatching.sol";
+import {SafeERC20} from "../../lib/openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
  * @title  SubaccountDepositIntent
@@ -13,6 +14,8 @@ import {IMatching} from "../interfaces/derive/IMatching.sol";
  * @dev    Users who wish to have the auto-deposit feature need to approve this contract to spend their tokens
  */
 contract SubaccountDepositIntent is IntentExecutorBase {
+    using SafeERC20 for IERC20;
+
     IMatching public immutable MATCHING;
 
     error SubaccountOwnerMismatch();
@@ -38,8 +41,8 @@ contract SubaccountDepositIntent is IntentExecutorBase {
         _verifySubaccountOwner(subaccountId, scw);
 
         IERC20 token = IERC20BasedAsset(deriveAsset).wrappedAsset();
-        token.transferFrom(scw, address(this), amount);
-        token.approve(address(deriveAsset), amount);
+        token.safeTransferFrom(scw, address(this), amount);
+        token.safeApprove(address(deriveAsset), amount);
 
         IERC20BasedAsset(deriveAsset).deposit(subaccountId, amount);
 
