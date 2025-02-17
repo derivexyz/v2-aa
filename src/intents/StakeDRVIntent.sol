@@ -30,7 +30,6 @@ contract StakeDRVIntent is IntentExecutorBase {
      * @param amount The amount of DRV to stake
      */
     function executeStakeDRVIntent(address scw, uint256 amount) external onlyIntentExecutor {
-        
         IERC20(DRV).transferFrom(scw, address(this), amount);
         IStakedDRV(StakedDRV).convertTo(amount, scw);
         emit IntentStakeDRV(scw, amount);
