@@ -25,7 +25,7 @@ contract FORK_LYRA_WithdrawBridgeIntent is Test {
 
     // Socket withdraw wrapper
     ISocketWithdrawWrapper public socketBridge = ISocketWithdrawWrapper(0xea8E683D8C46ff05B871822a00461995F93df800);
-    
+
     // Socket Parameters for testing
     address public weETHController = address(0xf58fF1Adc4d045e712a6D91e69d93B4092516659);
     address public weETHConnector = address(0x6Ee9b6ad1c97AdeeD071fd5f349cE65f91e43333);
@@ -56,6 +56,8 @@ contract FORK_LYRA_WithdrawBridgeIntent is Test {
 
         // set executor as intent executor
         bridgeIntent.setIntentExecutor(executor, true);
+        // set bucket params
+        bridgeIntent.setBucketParams(60, 10); // 10 withdrawals per minute
 
         // scw approves bridgeIntent to spend weETH
         vm.startPrank(scw);
@@ -106,6 +108,55 @@ contract FORK_LYRA_WithdrawBridgeIntent is Test {
 
         vm.expectRevert(IntentExecutorBase.NotIntentExecutor.selector);
         bridgeIntent.executeWithdrawIntentLZ(scw, drv, 10 ether, 10e18, address(0), 30184);
+        vm.stopPrank();
+    }
+
+    function test_WithdrawStateUpdate() public onlyDeriveMainnet {
+        address owner = ILightAccount(scw).owner();
+        assertEq(bridgeIntent.isWithdrawLimitReached(), false);
+
+        // set the withdraw limit to 1
+        bridgeIntent.setBucketParams(60, 1);
+
+        vm.prank(executor);
+        bridgeIntent.executeWithdrawIntentSocket(
+            scw, weETH, 1 ether, 0.1 ether, owner, weETHController, weETHConnector, 200000
+        );
+
+        assertEq(bridgeIntent.withdrawCount(), 1);
+        assertEq(bridgeIntent.isWithdrawLimitReached(), true);
+
+        // increase the withdraw limit, more withdrawals are allowed
+        bridgeIntent.setBucketParams(60, 5);
+        assertEq(bridgeIntent.isWithdrawLimitReached(), false);
+
+        vm.prank(executor);
+        bridgeIntent.executeWithdrawIntentSocket(
+            scw, weETH, 1 ether, 0.1 ether, owner, weETHController, weETHConnector, 200000
+        );
+
+        assertEq(bridgeIntent.withdrawCount(), 2);
+    }
+
+    function test_RevertIf_WithdrawLimitReached() public onlyDeriveMainnet {
+        address owner = ILightAccount(scw).owner();
+        // set the withdraw limit to 1
+        bridgeIntent.setBucketParams(60, 1);
+
+        vm.startPrank(executor);
+        bridgeIntent.executeWithdrawIntentSocket(
+            scw, weETH, 1 ether, 0.1 ether, owner, weETHController, weETHConnector, 200000
+        );
+
+        // expect revert for the second withdraw
+        vm.expectRevert(WithdrawBridgeIntent.WithdrawLimitReached.selector);
+        bridgeIntent.executeWithdrawIntentLZ(scw, drv, 10 ether, 10e18, owner, 30184);
+
+        vm.warp(block.timestamp + 60);
+        bridgeIntent.executeWithdrawIntentSocket(
+            scw, weETH, 1 ether, 0.1 ether, owner, weETHController, weETHConnector, 200000
+        );
+
         vm.stopPrank();
     }
 

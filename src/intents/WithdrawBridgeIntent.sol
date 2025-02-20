@@ -25,8 +25,18 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
 
     IOFTWithdrawWrapper public immutable IOFT_BRIDGE;
 
+    /// @dev Width of each bucket in seconds
+    uint64 public bucketWidth;
+    /// @dev The last time a bucket started
+    uint64 public lastBucketStart;
+    /// @dev Maximum number of withdrawals per bucket
+    uint128 public maxWithdrawPerBucket;
+    /// @dev Number of withdrawals for the current bucket
+    uint128 public withdrawCount;
+
     error InvalidRecipient();
     error FeeTooHigh();
+    error WithdrawLimitReached();
 
     event IntentWithdrawSocket(
         address indexed scw,
@@ -41,9 +51,33 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
         address indexed scw, address indexed token, uint256 amount, address recipient, uint32 destEID
     );
 
+    event BucketParamsSet(uint64 bucketWidth, uint128 maxWithdrawPerBucket);
+
     constructor(ISocketWithdrawWrapper _socketBridge, IOFTWithdrawWrapper _iOFTBridge) {
         SOCKET_BRIDGE = _socketBridge;
         IOFT_BRIDGE = _iOFTBridge;
+    }
+
+    /**
+     * @notice Set the bucket parameters
+     * @param _bucketWidth The width of each bucket in seconds
+     * @param _maxWithdrawPerBucket The maximum number of withdrawals per bucket
+     */
+    function setBucketParams(uint64 _bucketWidth, uint128 _maxWithdrawPerBucket) external onlyOwner {
+        bucketWidth = _bucketWidth;
+        maxWithdrawPerBucket = _maxWithdrawPerBucket;
+
+        emit BucketParamsSet(_bucketWidth, _maxWithdrawPerBucket);
+    }
+
+    /**
+     * @notice Check if the current withdraw limit is exceeded
+     * @return true if the withdraw limit is exceeded, false otherwise
+     */
+    function isWithdrawLimitReached() external view returns (bool) {
+        if (block.timestamp >= lastBucketStart + bucketWidth) return false;
+
+        return withdrawCount >= maxWithdrawPerBucket;
     }
 
     /**
@@ -66,6 +100,8 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
         address connector,
         uint256 gasLimit
     ) external onlyIntentExecutor {
+        _checkAndUpdateWithdrawCount();
+
         IERC20(token).safeTransferFrom(scw, address(this), amount);
         IERC20(token).safeApprove(address(SOCKET_BRIDGE), amount);
 
@@ -102,6 +138,8 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
         address recipient,
         uint32 destEID
     ) external onlyIntentExecutor {
+        _checkAndUpdateWithdrawCount();
+
         IERC20(token).safeTransferFrom(scw, address(this), amount);
         IERC20(token).safeApprove(address(IOFT_BRIDGE), amount);
 
@@ -118,5 +156,19 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
         IOFT_BRIDGE.withdrawToChain(token, amount, recipient, destEID);
 
         emit IntentWithdrawLZ(scw, token, amount, recipient, destEID);
+    }
+
+    /**
+     * @dev check that the number of withdrawals for the current bucket is less than the maximum
+     */
+    function _checkAndUpdateWithdrawCount() internal {
+        if (block.timestamp >= lastBucketStart + bucketWidth) {
+            lastBucketStart = uint64(block.timestamp);
+            withdrawCount = 0;
+        }
+
+        withdrawCount++;
+
+        if (withdrawCount > maxWithdrawPerBucket) revert WithdrawLimitReached();
     }
 }
