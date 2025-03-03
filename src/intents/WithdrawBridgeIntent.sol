@@ -21,9 +21,9 @@ import {SafeERC20} from "../../lib/openzeppelin-contracts/contracts/token/ERC20/
 contract WithdrawBridgeIntent is IntentExecutorBase {
     using SafeERC20 for IERC20;
 
-    ISocketWithdrawWrapper public immutable SOCKET_BRIDGE;
+    ISocketWithdrawWrapper public immutable SOCKET_WITHDRAW_WRAPPER;
 
-    IOFTWithdrawWrapper public immutable IOFT_BRIDGE;
+    IOFTWithdrawWrapper public immutable IOFT_WITHDRAW_WRAPPER;
 
     /// @dev Width of each bucket in seconds
     uint64 public bucketWidth;
@@ -54,8 +54,8 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
     event BucketParamsSet(uint64 bucketWidth, uint128 maxWithdrawPerBucket);
 
     constructor(ISocketWithdrawWrapper _socketBridge, IOFTWithdrawWrapper _iOFTBridge) {
-        SOCKET_BRIDGE = _socketBridge;
-        IOFT_BRIDGE = _iOFTBridge;
+        SOCKET_WITHDRAW_WRAPPER = _socketBridge;
+        IOFT_WITHDRAW_WRAPPER = _iOFTBridge;
     }
 
     /**
@@ -103,10 +103,10 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
         _checkAndUpdateWithdrawCount();
 
         IERC20(token).safeTransferFrom(scw, address(this), amount);
-        IERC20(token).safeApprove(address(SOCKET_BRIDGE), amount);
+        IERC20(token).safeApprove(address(SOCKET_WITHDRAW_WRAPPER), amount);
 
         if (maxFee > 0) {
-            uint256 feeInToken = SOCKET_BRIDGE.getFeeInToken(token, controller, connector, gasLimit);
+            uint256 feeInToken = SOCKET_WITHDRAW_WRAPPER.getFeeInToken(token, controller, connector, gasLimit);
             if (feeInToken > maxFee) revert FeeTooHigh();
         }
 
@@ -115,7 +115,7 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
             revert InvalidRecipient();
         }
 
-        SOCKET_BRIDGE.withdrawToChain(token, amount, recipient, controller, connector, gasLimit);
+        SOCKET_WITHDRAW_WRAPPER.withdrawToChain(token, amount, recipient, controller, connector, gasLimit);
 
         emit IntentWithdrawSocket(scw, token, amount, recipient, controller, connector);
     }
@@ -141,10 +141,10 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
         _checkAndUpdateWithdrawCount();
 
         IERC20(token).safeTransferFrom(scw, address(this), amount);
-        IERC20(token).safeApprove(address(IOFT_BRIDGE), amount);
+        IERC20(token).safeApprove(address(IOFT_WITHDRAW_WRAPPER), amount);
 
         if (maxFee > 0) {
-            uint256 feeInToken = IOFT_BRIDGE.getFeeInToken(token, amount, destEID);
+            uint256 feeInToken = IOFT_WITHDRAW_WRAPPER.getFeeInToken(token, amount, destEID);
             if (feeInToken > maxFee) revert FeeTooHigh();
         }
 
@@ -153,7 +153,7 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
             revert InvalidRecipient();
         }
 
-        IOFT_BRIDGE.withdrawToChain(token, amount, recipient, destEID);
+        IOFT_WITHDRAW_WRAPPER.withdrawToChain(token, amount, recipient, destEID);
 
         emit IntentWithdrawLZ(scw, token, amount, recipient, destEID);
     }
