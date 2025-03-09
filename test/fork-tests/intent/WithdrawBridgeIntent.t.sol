@@ -119,9 +119,7 @@ contract FORK_LYRA_WithdrawBridgeIntent is Test {
         bridgeIntent.setBucketParams(60, 1);
 
         vm.prank(executor);
-        bridgeIntent.executeWithdrawIntentSocket(
-            scw, weETH, 1 ether, 0.1 ether, owner, weETHController, weETHConnector, 200000
-        );
+        _executeWithdrawWeETH(owner);
 
         assertEq(bridgeIntent.withdrawCount(), 1);
         assertEq(bridgeIntent.isWithdrawLimitReached(), true);
@@ -131,11 +129,15 @@ contract FORK_LYRA_WithdrawBridgeIntent is Test {
         assertEq(bridgeIntent.isWithdrawLimitReached(), false);
 
         vm.prank(executor);
-        bridgeIntent.executeWithdrawIntentSocket(
-            scw, weETH, 1 ether, 0.1 ether, owner, weETHController, weETHConnector, 200000
-        );
+        _executeWithdrawWeETH(owner);
 
         assertEq(bridgeIntent.withdrawCount(), 2);
+    }
+
+    function test_RevertIf_LimitNotSetByOwner() public onlyDeriveMainnet {
+        vm.expectRevert(bytes("Ownable: caller is not the owner"));
+        vm.prank(executor);
+        bridgeIntent.setBucketParams(60, 100);
     }
 
     function test_RevertIf_WithdrawLimitReached() public onlyDeriveMainnet {
@@ -144,18 +146,59 @@ contract FORK_LYRA_WithdrawBridgeIntent is Test {
         bridgeIntent.setBucketParams(60, 1);
 
         vm.startPrank(executor);
-        bridgeIntent.executeWithdrawIntentSocket(
-            scw, weETH, 1 ether, 0.1 ether, owner, weETHController, weETHConnector, 200000
-        );
+        _executeWithdrawWeETH(owner);
 
         // expect revert for the second withdraw
         vm.expectRevert(WithdrawBridgeIntent.WithdrawLimitReached.selector);
-        bridgeIntent.executeWithdrawIntentLZ(scw, drv, 10 ether, 10e18, owner, 30184);
+        _executeWithdrawDRV(owner);
 
+        // after 1 minute, the withdraw can go through
         vm.warp(block.timestamp + 60);
-        bridgeIntent.executeWithdrawIntentSocket(
-            scw, weETH, 1 ether, 0.1 ether, owner, weETHController, weETHConnector, 200000
-        );
+        _executeWithdrawWeETH(owner);
+
+        vm.stopPrank();
+    }
+
+    function test_WithdrawLimit_Update() public onlyDeriveMainnet {
+        address owner = ILightAccount(scw).owner();
+        // set the withdraw limit to 2 per minute
+        bridgeIntent.setBucketParams(60, 2);
+
+        vm.startPrank(executor);
+
+        // withdraw 2 times
+        _executeWithdrawDRV(owner);
+        _executeWithdrawDRV(owner);
+
+        // expect revert for the third withdraw
+        vm.expectRevert(WithdrawBridgeIntent.WithdrawLimitReached.selector);
+        _executeWithdrawDRV(owner);
+        vm.stopPrank();
+
+        // after 30 seconds, the withdraw limit is updated to 3 times every 120 seconds
+        // the timer will not reset
+        vm.warp(block.timestamp + 30);
+        bridgeIntent.setBucketParams(120, 3);
+
+        vm.startPrank(executor);
+        // 1 more withdraw is allowed
+        _executeWithdrawDRV(owner);
+
+        // revert for the fourth withdraw
+        vm.expectRevert(WithdrawBridgeIntent.WithdrawLimitReached.selector);
+        _executeWithdrawDRV(owner);
+
+        // wait another 30 seconds, the limit is still there
+        vm.warp(block.timestamp + 30);
+        vm.expectRevert(WithdrawBridgeIntent.WithdrawLimitReached.selector);
+        _executeWithdrawDRV(owner);
+        assertEq(bridgeIntent.withdrawCount(), 3);
+
+        // wait another 60 seconds, the limit is reset
+        vm.warp(block.timestamp + 60);
+        // 1 more withdraw is allowed
+        _executeWithdrawDRV(owner);
+        assertEq(bridgeIntent.withdrawCount(), 1);
 
         vm.stopPrank();
     }
@@ -178,6 +221,18 @@ contract FORK_LYRA_WithdrawBridgeIntent is Test {
         );
 
         vm.stopPrank();
+    }
+
+    /// @dev wrapped function used to simplify the limit tests
+    function _executeWithdrawDRV(address owner) internal {
+        bridgeIntent.executeWithdrawIntentLZ(scw, drv, 10 ether, 10e18, owner, 30184);
+    }
+
+    /// @dev wrapped function used to simplify the limit tests
+    function _executeWithdrawWeETH(address owner) internal {
+        bridgeIntent.executeWithdrawIntentSocket(
+            scw, weETH, 1 ether, 0.1 ether, owner, weETHController, weETHConnector, 200000
+        );
     }
 
     receive() external payable {}
