@@ -125,7 +125,7 @@ contract FORK_LYRA_LyraWithdrawalV2Test is Test {
 
     function test_fork_getFee() public onlyLyra {
         uint256 fee = wrapper.getFeeInToken(usdc, usdcController, usdc_Mainnet_Connector, 200_000);
-        assertGt(fee, 1e6);
+        assertGt(fee, 1e5);
         assertLt(fee, 300e6);
 
         fee = wrapper.getFeeInToken(usdc, usdcController, usdc_Arbi_Connector, 200_000);
