@@ -2,6 +2,7 @@
 pragma solidity ^0.8.9;
 
 import {IERC20} from "../../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "../../lib/openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IStakedDRV} from "../interfaces/derive/IStakedDRV.sol";
 
 import {IntentExecutorBase} from "./IntentExecutorBase.sol";
@@ -15,12 +16,14 @@ contract StakeDRVIntent is IntentExecutorBase {
     address public immutable DRV;
     address public immutable StakedDRV;
 
+    using SafeERC20 for IERC20;
+
     event IntentStakeDRV(address indexed scw, uint256 amount);
 
     constructor(address _drv, address _stakedDRV) {
         DRV = _drv;
         StakedDRV = _stakedDRV;
-        IERC20(DRV).approve(address(StakedDRV), type(uint256).max);
+        IERC20(_drv).approve(address(_stakedDRV), type(uint256).max);
     }
 
     /**
@@ -30,7 +33,7 @@ contract StakeDRVIntent is IntentExecutorBase {
      * @param amount The amount of DRV to stake
      */
     function executeStakeDRVIntent(address scw, uint256 amount) external onlyIntentExecutor {
-        IERC20(DRV).transferFrom(scw, address(this), amount);
+        IERC20(DRV).safeTransferFrom(scw, address(this), amount);
         IStakedDRV(StakedDRV).convertTo(amount, scw);
         emit IntentStakeDRV(scw, amount);
     }

@@ -30,9 +30,9 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
     /// @dev The last time a bucket started
     uint64 public lastBucketStart;
     /// @dev Maximum number of withdrawals per bucket
-    uint128 public maxWithdrawPerBucket;
+    uint64 public maxWithdrawPerBucket;
     /// @dev Number of withdrawals for the current bucket
-    uint128 public withdrawCount;
+    uint64 public withdrawCount;
 
     error InvalidRecipient();
     error FeeTooHigh();
@@ -51,7 +51,7 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
         address indexed scw, address indexed token, uint256 amount, address recipient, uint32 destEID
     );
 
-    event BucketParamsSet(uint64 bucketWidth, uint128 maxWithdrawPerBucket);
+    event BucketParamsSet(uint64 bucketWidth, uint64 maxWithdrawPerBucket);
 
     constructor(ISocketWithdrawWrapper _socketBridge, IOFTWithdrawWrapper _iOFTBridge) {
         SOCKET_WITHDRAW_WRAPPER = _socketBridge;
@@ -63,7 +63,7 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
      * @param _bucketWidth The width of each bucket in seconds
      * @param _maxWithdrawPerBucket The maximum number of withdrawals per bucket
      */
-    function setBucketParams(uint64 _bucketWidth, uint128 _maxWithdrawPerBucket) external onlyOwner {
+    function setBucketParams(uint64 _bucketWidth, uint64 _maxWithdrawPerBucket) external onlyOwner {
         bucketWidth = _bucketWidth;
         maxWithdrawPerBucket = _maxWithdrawPerBucket;
 

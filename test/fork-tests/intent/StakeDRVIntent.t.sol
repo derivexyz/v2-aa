@@ -69,5 +69,15 @@ contract FORK_LYRA_StakeDRVIntent is Test {
         vm.stopPrank();
     }
 
+    function test_RescueToken() public onlyDeriveMainnet {
+        deal(address(drv), address(stakeIntent), 1000 ether);
+        
+        uint256 balanceBefore = IERC20(drv).balanceOf(address(this));
+        stakeIntent.rescueToken(drv);
+        
+        uint256 balanceAfter = IERC20(drv).balanceOf(address(this));
+        assertEq(balanceAfter, balanceBefore + 1000 ether);
+    }
+
     receive() external payable {}
 }
