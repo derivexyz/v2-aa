@@ -105,7 +105,7 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
         IERC20(token).safeTransferFrom(scw, address(this), amount);
         IERC20(token).safeApprove(address(SOCKET_WITHDRAW_WRAPPER), amount);
 
-        if (maxFee > 0) {
+        if (maxFee != type(uint256).max) {
             uint256 feeInToken = SOCKET_WITHDRAW_WRAPPER.getFeeInToken(token, controller, connector, gasLimit);
             if (feeInToken > maxFee) revert FeeTooHigh();
         }
@@ -143,7 +143,7 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
         IERC20(token).safeTransferFrom(scw, address(this), amount);
         IERC20(token).safeApprove(address(IOFT_WITHDRAW_WRAPPER), amount);
 
-        if (maxFee > 0) {
+        if (maxFee != type(uint256).max) {
             uint256 feeInToken = IOFT_WITHDRAW_WRAPPER.getFeeInToken(token, amount, destEID);
             if (feeInToken > maxFee) revert FeeTooHigh();
         }

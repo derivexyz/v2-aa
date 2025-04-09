@@ -83,6 +83,22 @@ contract FORK_LYRA_WithdrawBridgeIntent is Test {
         assertEq(erc20BalanceAfter, erc20BalanceBefore - 1 ether);
     }
 
+    function test_WithdrawIntent_NoMaxFee() public onlyDeriveMainnet {
+        // test we can withdraw to SCW owner
+        address owner = ILightAccount(scw).owner();
+
+        uint256 erc20BalanceBefore = IERC20(weETH).balanceOf(scw);
+
+        vm.startPrank(executor);
+        bridgeIntent.executeWithdrawIntentSocket(
+            scw, weETH, 1 ether, type(uint256).max, owner, weETHController, weETHConnector, 200000
+        );
+        vm.stopPrank();
+
+        uint256 erc20BalanceAfter = IERC20(weETH).balanceOf(scw);
+        assertEq(erc20BalanceAfter, erc20BalanceBefore - 1 ether);
+    }
+
     function test_WithdrawIntent_DRV() public onlyDeriveMainnet {
         uint256 erc20BalanceBefore = IERC20(drv).balanceOf(scw);
 
