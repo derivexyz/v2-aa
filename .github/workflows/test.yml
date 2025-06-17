@@ -25,4 +25,4 @@ jobs:
         run: forge test --match-contract FORK_LYRA_ --fork-url https://rpc.lyra.finance
 
       - name: Run Mainnet fork tests
-        run: forge test --match-contract FORK_MAINNET_ --fork-url https://mainnet.infura.io/v3/743507feddbd4a8088614092511076bc -vvv
+        run: forge test --match-contract FORK_MAINNET_ --fork-url https://mainnet.infura.io/v3/b3801473275f4a0a846ea7fe5a629349 -vvv

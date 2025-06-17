@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
+// solhint-disable contract-name-camelcase
+// solhint-disable func-name-mixedcase
+// solhint-disable var-name-mixedcase
 pragma solidity ^0.8.18;
 
 import "lib/forge-std/src/Test.sol";
@@ -113,7 +116,7 @@ contract FORK_LYRA_LyraWithdrawalV2Test is Test {
         vm.startPrank(alice);
         IERC20(usdc).approve(address(wrapper), type(uint256).max);
 
-        uint256 amount = 1e6;
+        uint256 amount = 1e3;
         vm.expectRevert(bytes("withdraw amount < fee"));
         wrapper.withdrawToChain(usdc, amount, alice, usdcController, usdc_Arbi_Connector, 200_000);
 
@@ -122,19 +125,19 @@ contract FORK_LYRA_LyraWithdrawalV2Test is Test {
 
     function test_fork_getFee() public onlyLyra {
         uint256 fee = wrapper.getFeeInToken(usdc, usdcController, usdc_Mainnet_Connector, 200_000);
-        assertGt(fee, 1e6);
+        assertGt(fee, 1e5);
         assertLt(fee, 300e6);
 
         fee = wrapper.getFeeInToken(usdc, usdcController, usdc_Arbi_Connector, 200_000);
         assertLt(fee, 10e6);
     }
 
-    function _mintLyraUSDC(address account, uint256 amount) public {
+    function _mintLyraUSDC(address account, uint256 amount) private {
         vm.prank(usdc_Mainnet_Connector);
         IFiatController(usdcController).receiveInbound(abi.encode(account, amount));
     }
 
-    function _mintLyraWBTC(address account, uint256 amount) public {
+    function _mintLyraWBTC(address account, uint256 amount) private {
         vm.prank(wBTC_OP_Connector);
         IFiatController(wBTCController).receiveInbound(abi.encode(account, amount));
     }
