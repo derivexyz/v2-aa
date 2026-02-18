@@ -13,7 +13,7 @@ contract LyraWithdrawWrapperV2 is Ownable {
     /// @dev price of asset in wei. How many {token wei} is 1 ETH * 1e18.
     mapping(address token => uint256) public staticPrice;
 
-    constructor() payable {}
+    constructor() payable Ownable(msg.sender) {}
 
     /**
      * @notice      withdraw token from Lyra chain to another chain with Socket bridge

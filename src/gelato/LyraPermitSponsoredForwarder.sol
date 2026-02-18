@@ -31,7 +31,7 @@ contract LyraPermitSponsoredForwarder2 is Ownable, ERC2771Context {
         bytes32 s;
     }
 
-    constructor() payable ERC2771Context(0xd8253782c45a12053594b9deB72d8e8aB2Fca54c) {}
+    constructor() payable ERC2771Context(0xd8253782c45a12053594b9deB72d8e8aB2Fca54c) Ownable(msg.sender) {}
 
     function setWhitelistVault(address vault, bool isWhitelisted) external onlyOwner {
         wlVault[vault] = isWhitelisted;
@@ -58,9 +58,17 @@ contract LyraPermitSponsoredForwarder2 is Ownable, ERC2771Context {
         address msgSender = _msgSender();
 
         // use try catch so that others cannot grief by submitting the same permit data before this tx
-        try IERC20Permit(token).permit(
-            msgSender, address(this), permitData.value, permitData.deadline, permitData.v, permitData.r, permitData.s
-        ) {} catch {}
+        try IERC20Permit(token)
+            .permit(
+                msgSender,
+                address(this),
+                permitData.value,
+                permitData.deadline,
+                permitData.v,
+                permitData.r,
+                permitData.s
+            ) {}
+            catch {}
 
         IERC20(token).transferFrom(msgSender, address(this), permitData.value);
         IERC20(token).approve(socketVault, permitData.value);

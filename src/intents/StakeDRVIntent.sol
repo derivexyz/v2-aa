@@ -5,7 +5,7 @@ import {IERC20} from "../../lib/openzeppelin-contracts/contracts/token/ERC20/IER
 import {SafeERC20} from "../../lib/openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IStakedDRV} from "../interfaces/derive/IStakedDRV.sol";
 
-import {IntentExecutorBase} from "./IntentExecutorBase.sol";
+import {IntentExecutorBase, Ownable} from "./IntentExecutorBase.sol";
 
 /**
  * @title  StakeDRVIntent
@@ -20,7 +20,7 @@ contract StakeDRVIntent is IntentExecutorBase {
 
     event IntentStakeDRV(address indexed scw, uint256 amount);
 
-    constructor(address _drv, address _stakedDRV) {
+    constructor(address _drv, address _stakedDRV) Ownable(msg.sender) {
         DRV = _drv;
         StakedDRV = _stakedDRV;
         IERC20(_drv).approve(address(_stakedDRV), type(uint256).max);

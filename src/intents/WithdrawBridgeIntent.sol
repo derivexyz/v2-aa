@@ -2,7 +2,7 @@
 pragma solidity ^0.8.9;
 
 import {IERC20} from "../../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
-import {IntentExecutorBase} from "./IntentExecutorBase.sol";
+import {IntentExecutorBase, Ownable} from "./IntentExecutorBase.sol";
 import {ILightAccount} from "../interfaces/ILightAccount.sol";
 import {ISocketWithdrawWrapper} from "../interfaces/derive/ISocketWithdrawWrapper.sol";
 import {IOFTWithdrawWrapper} from "../interfaces/derive/IOFTWithdrawWrapper.sol";
@@ -34,6 +34,8 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
     /// @dev Number of withdrawals for the current bucket
     uint64 public withdrawCount;
 
+    mapping(address withdrawer => mapping(bytes destination => bool approved)) public approvedDestinations;
+
     error InvalidRecipient();
     error FeeTooHigh();
     error WithdrawLimitReached();
@@ -53,7 +55,7 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
 
     event BucketParamsSet(uint64 bucketWidth, uint64 maxWithdrawPerBucket);
 
-    constructor(ISocketWithdrawWrapper _socketBridge, IOFTWithdrawWrapper _iOFTBridge) {
+    constructor(ISocketWithdrawWrapper _socketBridge, IOFTWithdrawWrapper _iOFTBridge) Ownable(msg.sender) {
         SOCKET_WITHDRAW_WRAPPER = _socketBridge;
         IOFT_WITHDRAW_WRAPPER = _iOFTBridge;
     }
@@ -103,7 +105,7 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
         _checkAndUpdateWithdrawCount();
 
         IERC20(token).safeTransferFrom(scw, address(this), amount);
-        IERC20(token).safeApprove(address(SOCKET_WITHDRAW_WRAPPER), amount);
+        IERC20(token).safeIncreaseAllowance(address(SOCKET_WITHDRAW_WRAPPER), amount);
 
         if (maxFee != type(uint256).max) {
             uint256 feeInToken = SOCKET_WITHDRAW_WRAPPER.getFeeInToken(token, controller, connector, gasLimit);
@@ -141,7 +143,7 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
         _checkAndUpdateWithdrawCount();
 
         IERC20(token).safeTransferFrom(scw, address(this), amount);
-        IERC20(token).safeApprove(address(IOFT_WITHDRAW_WRAPPER), amount);
+        IERC20(token).safeIncreaseAllowance(address(IOFT_WITHDRAW_WRAPPER), amount);
 
         if (maxFee != type(uint256).max) {
             uint256 feeInToken = IOFT_WITHDRAW_WRAPPER.getFeeInToken(token, amount, destEID);

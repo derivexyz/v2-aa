@@ -2,7 +2,7 @@
 pragma solidity ^0.8.9;
 
 import {IERC20} from "../../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
-import {IntentExecutorBase} from "./IntentExecutorBase.sol";
+import {IntentExecutorBase, Ownable} from "./IntentExecutorBase.sol";
 import {ISubaccounts} from "../interfaces/ISubaccounts.sol";
 import {IERC20BasedAsset} from "../interfaces/derive/IERC20BasedAsset.sol";
 import {IMatching} from "../interfaces/derive/IMatching.sol";
@@ -43,7 +43,7 @@ contract SubaccountDepositIntent is IntentExecutorBase {
     // Derive v2 asset addresses that are allowed to be deposited for intent executors
     mapping(address manager => ManagerType) public managerTypes;
 
-    constructor(IMatching _matching, address _cash) {
+    constructor(IMatching _matching, address _cash) Ownable(msg.sender) {
         MATCHING = _matching;
 
         SUBACCOUNTS = ISubaccounts(_matching.subAccounts());
@@ -70,7 +70,7 @@ contract SubaccountDepositIntent is IntentExecutorBase {
 
         IERC20 token = IERC20BasedAsset(deriveAsset).wrappedAsset();
         token.safeTransferFrom(scw, address(this), amount);
-        token.safeApprove(address(deriveAsset), amount);
+        token.safeIncreaseAllowance(address(deriveAsset), amount);
 
         IERC20BasedAsset(deriveAsset).deposit(subaccountId, amount);
 
@@ -102,7 +102,7 @@ contract SubaccountDepositIntent is IntentExecutorBase {
      * @dev   We first check if the subaccountId is managed by a legitimate manager, then based on manager type,
      *        read the allowed derive asset list
      * @param subaccountId subaccount ID
-     * @param deriveAsset address of the derive asset
+     * @param deriveAsset address of the derfive asset
      */
     function _isAllowedDeriveAsset(uint256 subaccountId, address deriveAsset) internal view returns (bool) {
         if (deriveAsset == CASH) return true;
@@ -117,8 +117,8 @@ contract SubaccountDepositIntent is IntentExecutorBase {
             IStandardManager.AssetDetail memory params = IStandardManager(manager).assetDetails(deriveAsset);
             return params.isWhitelisted;
         } else if (managerType == ManagerType.PM2) {
-            IPMRM2.CollateralParameters memory params = IPMRM2(manager).getCollateralParameters(deriveAsset);
-            return params.isEnabled;
+            address collateralSpotFeed = IPMRM2(manager).collateralSpotFeeds(deriveAsset);
+            return collateralSpotFeed != address(0);
         } else {
             return false;
         }

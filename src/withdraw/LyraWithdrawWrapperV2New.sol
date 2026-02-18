@@ -45,7 +45,7 @@ contract LyraWithdrawWrapperV2New is Ownable {
     address public feeRecipient;
     uint256 public payloadSize = 161;
 
-    constructor() payable {}
+    constructor() payable Ownable(msg.sender) {}
 
     ///////////
     // Admin //
