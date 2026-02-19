@@ -152,6 +152,10 @@ contract LyraOFTWithdrawWrapperV2 is Ownable {
         sourceOFT.send{value: fee.nativeFee}(sendParam, fee, msg.sender);
     }
 
+    ///////////
+    // Utils //
+    ///////////
+
     function addressToBytes32(address _addr) internal pure returns (bytes32) {
         return bytes32(uint256(uint160(_addr)));
     }

@@ -106,7 +106,7 @@ contract FORK_LYRA_WithdrawBridgeIntent is Test {
         address owner = ILightAccount(scw).owner();
 
         vm.startPrank(executor);
-        bridgeIntent.executeWithdrawIntentLZ(scw, drv, 10 ether, maxFee, owner, 30184);
+        bridgeIntent.executeWithdrawIntentLZ(scw, drv, 10 ether, maxFee, _addressToBytes32(owner), 30184);
         vm.stopPrank();
 
         uint256 erc20BalanceAfter = IERC20(drv).balanceOf(scw);
@@ -123,7 +123,7 @@ contract FORK_LYRA_WithdrawBridgeIntent is Test {
         );
 
         vm.expectRevert(IntentExecutorBase.NotIntentExecutor.selector);
-        bridgeIntent.executeWithdrawIntentLZ(scw, drv, 10 ether, 10e18, address(0), 30184);
+        bridgeIntent.executeWithdrawIntentLZ(scw, drv, 10 ether, 10e18, bytes32(0), 30184);
         vm.stopPrank();
     }
 
@@ -227,7 +227,7 @@ contract FORK_LYRA_WithdrawBridgeIntent is Test {
         uint256 fee = oftBridge.getFeeInToken(drv, 10 ether, 30184);
 
         vm.expectRevert(WithdrawBridgeIntent.FeeTooHigh.selector);
-        bridgeIntent.executeWithdrawIntentLZ(scw, drv, 10 ether, fee - 1, owner, 30184);
+        bridgeIntent.executeWithdrawIntentLZ(scw, drv, 10 ether, fee - 1, _addressToBytes32(owner), 30184);
 
         // weETH bridge
         fee = socketBridge.getFeeInToken(weETH, weETHController, weETHConnector2, 200000);
@@ -241,7 +241,7 @@ contract FORK_LYRA_WithdrawBridgeIntent is Test {
 
     /// @dev wrapped function used to simplify the limit tests
     function _executeWithdrawDRV(address owner) internal {
-        bridgeIntent.executeWithdrawIntentLZ(scw, drv, 10 ether, 10e18, owner, 30184);
+        bridgeIntent.executeWithdrawIntentLZ(scw, drv, 10 ether, 10e18, _addressToBytes32(owner), 30184);
     }
 
     /// @dev wrapped function used to simplify the limit tests
@@ -249,6 +249,11 @@ contract FORK_LYRA_WithdrawBridgeIntent is Test {
         bridgeIntent.executeWithdrawIntentSocket(
             scw, weETH, 1 ether, 0.1 ether, owner, weETHController, weETHConnector, 200000
         );
+    }
+
+    /// @dev Convert an address to bytes32
+    function _addressToBytes32(address _addr) internal pure returns (bytes32) {
+        return bytes32(uint256(uint160(_addr)));
     }
 
     receive() external payable {}

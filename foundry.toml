@@ -7,6 +7,9 @@ optimizer_runs = 2000
 gas_limit = "18446744073709551615"
 solc = '0.8.25'
 
+# Exclude devtools test folder which has missing LZ v1 dependencies
+ignore = ["lib/devtools/packages/test-devtools-evm-foundry/**"]
+
 remappings = [
     '@layerzerolabs/oft-evm/=lib/devtools/packages/oft-evm/',
     '@layerzerolabs/oapp-evm/=lib/devtools/packages/oapp-evm/',

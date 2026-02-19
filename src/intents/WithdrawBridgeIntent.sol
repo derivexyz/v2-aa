@@ -34,31 +34,92 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
     /// @dev Number of withdrawals for the current bucket
     uint64 public withdrawCount;
 
-    mapping(address withdrawer => mapping(bytes destination => bool approved)) public approvedDestinations;
+    /// @dev Mapping from SCW to approved destination addresses (as bytes32 for cross-chain compatibility)
+    mapping(address scw => bytes32[] destinations) public approvedDestinations;
 
-    error InvalidRecipient();
-    error FeeTooHigh();
-    error WithdrawLimitReached();
-
-    event IntentWithdrawSocket(
-        address indexed scw,
-        address indexed token,
-        uint256 amount,
-        address recipient,
-        address controller,
-        address connector
-    );
-
-    event IntentWithdrawLZ(
-        address indexed scw, address indexed token, uint256 amount, address recipient, uint32 destEID
-    );
-
-    event BucketParamsSet(uint64 bucketWidth, uint64 maxWithdrawPerBucket);
+    // Mapping of what destination EIDs are EVM chains, which means the recipient will be an address.
+    mapping(uint32 => bool) public evmEIDs;
 
     constructor(ISocketWithdrawWrapper _socketBridge, IOFTWithdrawWrapper _iOFTBridge) Ownable(msg.sender) {
         SOCKET_WITHDRAW_WRAPPER = _socketBridge;
         IOFT_WITHDRAW_WRAPPER = _iOFTBridge;
     }
+
+    /**
+     * @notice Set whether a destination EID is an EVM chain.
+     *         When true, the LZ withdraw will also accept the SCW owner as a valid recipient.
+     * @param eid  The LayerZero endpoint ID
+     * @param isEvm Whether the EID corresponds to an EVM chain
+     */
+    function setEvmEID(uint32 eid, bool isEvm) external onlyOwner {
+        evmEIDs[eid] = isEvm;
+        emit EvmEIDSet(eid, isEvm);
+    }
+
+    ///////////////////////////
+    // Approved Destinations //
+    ///////////////////////////
+
+    /**
+     * @notice Add an approved destination for a SCW. Can only be called by the SCW itself.
+     * @param destination The destination address as bytes32 (supports EVM and non-EVM addresses)
+     */
+    function addApprovedDestination(bytes32 destination) external {
+        bytes32[] storage destinations = approvedDestinations[msg.sender];
+        // Check if already exists
+        for (uint256 i = 0; i < destinations.length; i++) {
+            if (destinations[i] == destination) return;
+        }
+        destinations.push(destination);
+        emit DestinationApproved(msg.sender, destination);
+    }
+
+    /**
+     * @notice Remove an approved destination for a SCW. Can only be called by the SCW itself.
+     * @param destination The destination address as bytes32
+     */
+    function removeApprovedDestination(bytes32 destination) external {
+        bytes32[] storage destinations = approvedDestinations[msg.sender];
+        uint256 length = destinations.length;
+        for (uint256 i = 0; i < length; i++) {
+            if (destinations[i] == destination) {
+                // Swap with last element and pop
+                destinations[i] = destinations[length - 1];
+                destinations.pop();
+                emit DestinationRemoved(msg.sender, destination);
+                return;
+            }
+        }
+        revert DestinationNotFound();
+    }
+
+    /**
+     * @notice Get all approved destinations for a SCW
+     * @param scw The SCW address
+     * @return Array of approved destination addresses as bytes32
+     */
+    function getApprovedDestinations(address scw) external view returns (bytes32[] memory) {
+        return approvedDestinations[scw];
+    }
+
+    /**
+     * @notice Check if a destination is approved for a SCW (including the SCW owner)
+     * @param scw The SCW address
+     * @param destination The destination address as bytes32
+     * @return true if the destination is the SCW owner or explicitly approved
+     */
+    function isApprovedDestination(address scw, bytes32 destination, bool checkSCWOwner) public view returns (bool) {
+        if (checkSCWOwner && destination == _addressToBytes32(ILightAccount(scw).owner())) {
+            return true;
+        }
+
+        bytes32[] storage destinations = approvedDestinations[scw];
+        for (uint256 i = 0; i < destinations.length; i++) {
+            if (destinations[i] == destination) return true;
+        }
+        return false;
+    }
+
 
     /**
      * @notice Set the bucket parameters
@@ -88,7 +149,7 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
      * @param scw The light account address
      * @param token The ERC20 token address
      * @param amount The amount of tokens to withdraw
-     * @param recipient The recipient address, must specify explicitly as the SCW owner
+     * @param recipient The recipient address, must be the SCW owner or an approved destination
      * @param controller The Socket Controller address
      * @param connector The Socket Connector address
      */
@@ -112,8 +173,8 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
             if (feeInToken > maxFee) revert FeeTooHigh();
         }
 
-        // The recipient must be the owner of the SCW
-        if (ILightAccount(scw).owner() != recipient) {
+        // The recipient must be the owner of the SCW or an approved destination
+        if (!isApprovedDestination(scw, _addressToBytes32(recipient), true)) {
             revert InvalidRecipient();
         }
 
@@ -129,7 +190,7 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
      * @param token The ERC20 token address
      * @param amount The amount of tokens to withdraw
      * @param maxFee The maximum fee for the withdraw bridge
-     * @param recipient The recipient address, must specify explicitly as the SCW owner
+     * @param recipient The recipient address as bytes32, must be the SCW owner or an approved destination
      * @param destEID The destination EID
      */
     function executeWithdrawIntentLZ(
@@ -137,7 +198,7 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
         address token,
         uint256 amount,
         uint256 maxFee,
-        address recipient,
+        bytes32 recipient,
         uint32 destEID
     ) external onlyIntentExecutor {
         _checkAndUpdateWithdrawCount();
@@ -150,12 +211,15 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
             if (feeInToken > maxFee) revert FeeTooHigh();
         }
 
-        // The recipient must be the owner of the SCW
-        if (ILightAccount(scw).owner() != recipient) {
+        // For EVM destination chains, also accept the SCW owner as a valid recipient.
+        // For non-EVM chains, only explicitly approved destinations are accepted.
+        // This is to prevent the executor from withdrawing to an EVM destination that doesn't support the intended
+        // recipient format (e.g. Solana) and causing loss of funds.
+        if (!isApprovedDestination(scw, recipient, evmEIDs[destEID])) {
             revert InvalidRecipient();
         }
 
-        IOFT_WITHDRAW_WRAPPER.withdrawToChain(token, amount, recipient, destEID);
+        IOFT_WITHDRAW_WRAPPER.withdrawToChainBytes32(token, amount, recipient, destEID);
 
         emit IntentWithdrawLZ(scw, token, amount, recipient, destEID);
     }
@@ -173,4 +237,43 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
 
         if (withdrawCount > maxWithdrawPerBucket) revert WithdrawLimitReached();
     }
+
+    /**
+     * @dev Convert an address to bytes32
+     */
+    function _addressToBytes32(address _addr) internal pure returns (bytes32) {
+        return bytes32(uint256(uint160(_addr)));
+    }
+
+    ////////////
+    // Errors //
+    ////////////
+    error InvalidRecipient();
+    error FeeTooHigh();
+    error WithdrawLimitReached();
+    error DestinationNotFound();
+    error DestinationAlreadyApproved();
+    error InvalidB32Address();
+
+    ////////////
+    // Events //
+    ////////////
+    event IntentWithdrawSocket(
+        address indexed scw,
+        address indexed token,
+        uint256 amount,
+        address recipient,
+        address controller,
+        address connector
+    );
+
+    event IntentWithdrawLZ(
+        address indexed scw, address indexed token, uint256 amount, bytes32 recipient, uint32 destEID
+    );
+
+    event BucketParamsSet(uint64 bucketWidth, uint64 maxWithdrawPerBucket);
+
+    event DestinationApproved(address indexed scw, bytes32 indexed destination);
+    event DestinationRemoved(address indexed scw, bytes32 indexed destination);
+    event EvmEIDSet(uint32 indexed eid, bool isEvm);
 }
