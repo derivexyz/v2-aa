@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.18;
 
-import "openzeppelin/token/ERC20/extensions/IERC20Metadata.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 interface IOFTWithdrawWrapper {
     function withdrawToChain(address token, uint256 amount, address toAddress, uint32 destEID) external;
+
+    function withdrawToChainBytes32(address token, uint256 amount, bytes32 toAddressBytes32, uint32 destEID) external;
 
     function getFeeInToken(address token, uint256 amount, uint32 destEID) external view returns (uint256);
 }

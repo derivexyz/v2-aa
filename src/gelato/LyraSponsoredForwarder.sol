@@ -40,17 +40,18 @@ contract LyraSponsoredForwarder is LyraForwarderBase, ERC2771Context {
     ) external {
         address msgSender = _msgSender();
 
-        IERC3009(usdcLocal).receiveWithAuthorization(
-            msgSender,
-            address(this),
-            authData.value,
-            authData.validAfter,
-            authData.validBefore,
-            authData.nonce,
-            authData.v,
-            authData.r,
-            authData.s
-        );
+        IERC3009(usdcLocal)
+            .receiveWithAuthorization(
+                msgSender,
+                address(this),
+                authData.value,
+                authData.validAfter,
+                authData.validBefore,
+                authData.nonce,
+                authData.v,
+                authData.r,
+                authData.s
+            );
 
         uint256 feeInWei = ISocketVault(socketVault).getMinFees(connector, minGasLimit);
 

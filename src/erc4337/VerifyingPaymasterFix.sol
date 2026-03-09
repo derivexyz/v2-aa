@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.19;
 
-import {IEntryPoint} from "../../lib/account-abstraction/contracts/interfaces/IEntryPoint.sol";
-import {UserOperation} from "../../lib/account-abstraction/contracts/interfaces/UserOperation.sol";
-import {UserOperationLib} from "../../lib/account-abstraction/contracts/interfaces/UserOperation.sol";
-import {BasePaymaster} from "../../lib/account-abstraction/contracts/core/BasePaymaster.sol";
-import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import {IEntryPoint} from "account-abstraction/interfaces/IEntryPoint.sol";
+import {UserOperation} from "account-abstraction/interfaces/UserOperation.sol";
+import {UserOperationLib} from "account-abstraction/interfaces/UserOperation.sol";
+import {BasePaymaster, Ownable} from "account-abstraction/core/BasePaymaster.sol";
+import {ECDSA} from "./ECDSA.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-import "../../lib/account-abstraction/contracts/core/Helpers.sol" as Helpers;
+import "account-abstraction/core/Helpers.sol" as Helpers;
 
 /**
  * Similar to Stackup VerifyingPaymaster, but with a fix ERC20 fee.
@@ -28,9 +28,7 @@ contract VerifyingPaymasterFix is BasePaymaster {
 
     uint256 public constant POST_OP_GAS = 35000;
 
-    constructor(IEntryPoint _entryPoint, address _owner) BasePaymaster(_entryPoint) {
-        _transferOwnership(_owner);
-    }
+    constructor(IEntryPoint _entryPoint, address _owner) BasePaymaster(_entryPoint) Ownable(_owner) {}
 
     function pack(UserOperation calldata userOp) internal pure returns (bytes memory ret) {
         bytes calldata pnd = userOp.paymasterAndData;
@@ -66,7 +64,12 @@ contract VerifyingPaymasterFix is BasePaymaster {
         );
     }
 
-    function _validatePaymasterUserOp(UserOperation calldata userOp, bytes32, /*userOpHash*/ uint256 requiredPreFund)
+    function _validatePaymasterUserOp(
+        UserOperation calldata userOp,
+        bytes32,
+        /*userOpHash*/
+        uint256 requiredPreFund
+    )
         internal
         override
         returns (bytes memory context, uint256 validationData)

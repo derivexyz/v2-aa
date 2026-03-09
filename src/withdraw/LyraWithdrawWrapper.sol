@@ -18,7 +18,7 @@ contract LyraWithdrawWrapper is Ownable {
     ///@dev static ETH / USD price controlled by owner
     uint256 public staticPrice;
 
-    constructor(address _usdc, address _socketController, uint256 _staticRate) payable {
+    constructor(address _usdc, address _socketController, uint256 _staticRate) payable Ownable(msg.sender) {
         usdc = _usdc;
         socketController = _socketController;
 

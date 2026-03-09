@@ -3,15 +3,15 @@ pragma solidity ^0.8.9;
 
 import {IERC20} from "../../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import {IWETH} from "../interfaces/IWETH.sol";
-import {ISocketVault} from "../interfaces/ISocketVault.sol";
+import {ISocketVaultV2} from "../interfaces/ISocketVault.sol";
 import {ILightAccountFactory} from "../interfaces/ILightAccountFactory.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
- * @title  LyraDepositWrapper
+ * @title  DeriveDepositWrapperV2
  * @dev    Helper contract to wrap ETH into L2 WETH, or deposit any token to L2 smart contract wallet address
  */
-contract LyraDepositWrapper is Ownable {
+contract DeriveDepositWrapperV2 is Ownable {
     ///@dev L2 USDC address.
     address public immutable weth;
 
@@ -34,7 +34,7 @@ contract LyraDepositWrapper is Ownable {
      * @notice Wrap ETH into WETH and deposit to Lyra Chain via socket vault
      */
     function depositETHToLyra(address socketVault, bool isSCW, uint256 gasLimit, address connector) external payable {
-        uint256 socketFee = ISocketVault(socketVault).getMinFees(connector, gasLimit);
+        uint256 socketFee = ISocketVaultV2(socketVault).getMinFees(connector, gasLimit, 161);
 
         uint256 depositAmount = msg.value - socketFee;
 
@@ -43,7 +43,9 @@ contract LyraDepositWrapper is Ownable {
 
         address recipient = _getL2Receiver(isSCW);
 
-        ISocketVault(socketVault).depositToAppChain{value: socketFee}(recipient, depositAmount, gasLimit, connector);
+        ISocketVaultV2(socketVault).bridge{value: socketFee}(
+            recipient, depositAmount, gasLimit, connector, new bytes(0), new bytes(0)
+        );
     }
 
     /**
@@ -62,9 +64,11 @@ contract LyraDepositWrapper is Ownable {
         IERC20(token).approve(socketVault, amount);
 
         address recipient = _getL2Receiver(isSCW);
-        uint256 socketFee = ISocketVault(socketVault).getMinFees(connector, gasLimit);
+        uint256 socketFee = ISocketVaultV2(socketVault).getMinFees(connector, gasLimit, 161);
 
-        ISocketVault(socketVault).depositToAppChain{value: socketFee}(recipient, amount, gasLimit, connector);
+        ISocketVaultV2(socketVault).bridge{value: socketFee}(
+            recipient, amount, gasLimit, connector, new bytes(0), new bytes(0)
+        );
     }
 
     /**

@@ -31,7 +31,7 @@ contract LyraPermitSelfPayingForwarder is Ownable, GelatoRelayContextERC2771 {
         bytes32 s;
     }
 
-    constructor() payable GelatoRelayContextERC2771() {}
+    constructor() payable GelatoRelayContextERC2771() Ownable(msg.sender) {}
 
     /**
      * @notice  Deposit USDC to L2 through socket bridge. Gas is paid in token
@@ -54,9 +54,17 @@ contract LyraPermitSelfPayingForwarder is Ownable, GelatoRelayContextERC2771 {
         address msgSender = _getMsgSender();
 
         // use try catch so that others cannot grief by submitting the same permit data before this tx
-        try IERC20Permit(token).permit(
-            msgSender, address(this), permitData.value, permitData.deadline, permitData.v, permitData.r, permitData.s
-        ) {} catch {}
+        try IERC20Permit(token)
+            .permit(
+                msgSender,
+                address(this),
+                permitData.value,
+                permitData.deadline,
+                permitData.v,
+                permitData.r,
+                permitData.s
+            ) {}
+            catch {}
 
         IERC20(token).transferFrom(msgSender, address(this), permitData.value);
         IERC20(token).approve(socketVault, permitData.value);

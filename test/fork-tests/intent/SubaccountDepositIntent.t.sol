@@ -30,6 +30,7 @@ contract FORK_LYRA_SubaccountDepositIntent is Test {
 
     uint256 public subaccountId;
     address public standardManager = address(0x28c9ddF9A3B29c2E6a561c1BC520954e5A33de5D);
+    address public pm2 = address(0xc755DAe3fd295A687adf3e192387163f813F0598);
 
     // Any Smart wallet address
     address public user = address(0x03CdE1E0bc6C1e096505253b310Cf454b0b462FB);
@@ -56,7 +57,7 @@ contract FORK_LYRA_SubaccountDepositIntent is Test {
         vm.startPrank(user);
 
         // create a new subaccount to make sure balances are clean
-        subaccountId = matching.createSubAccount(standardManager);
+        subaccountId = matching.createSubAccount(pm2);
 
         IERC20(DAI).approve(address(depositIntent), type(uint256).max);
         IERC20(USDC).approve(address(depositIntent), type(uint256).max);
@@ -66,9 +67,8 @@ contract FORK_LYRA_SubaccountDepositIntent is Test {
         depositIntent.setIntentExecutor(executor, true);
 
         // set DAIAsset as allowed derive asset
-        depositIntent.setManagerTypes(
-            0x28c9ddF9A3B29c2E6a561c1BC520954e5A33de5D, SubaccountDepositIntent.ManagerType.Standard
-        );
+        depositIntent.setManagerTypes(standardManager, SubaccountDepositIntent.ManagerType.Standard);
+        depositIntent.setManagerTypes(pm2, SubaccountDepositIntent.ManagerType.PM2);
     }
 
     function test_DepositIntent() public onlyDeriveMainnet {

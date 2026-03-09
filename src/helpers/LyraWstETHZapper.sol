@@ -21,7 +21,7 @@ contract LyraWstETHZapper is Ownable {
     ///@dev Light Account factory address.
     address public constant lightAccountFactory = 0x000000893A26168158fbeaDD9335Be5bC96592E2;
 
-    constructor(address _weth, address _wstETH) Ownable() {
+    constructor(address _weth, address _wstETH) Ownable(msg.sender) {
         weth = IWETH(_weth);
         wstETH = IWstETH(_wstETH);
         stETH = IStETH(wstETH.stETH());

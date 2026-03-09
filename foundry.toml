@@ -6,6 +6,23 @@ optimizer = true
 optimizer_runs = 2000
 gas_limit = "18446744073709551615"
 solc = '0.8.25'
+
+# Exclude devtools test folder which has missing LZ v1 dependencies
+ignore = ["lib/devtools/packages/test-devtools-evm-foundry/**"]
+
+remappings = [
+    '@layerzerolabs/oft-evm/=lib/devtools/packages/oft-evm/',
+    '@layerzerolabs/oapp-evm/=lib/devtools/packages/oapp-evm/',
+    '@layerzerolabs/lz-evm-protocol-v2/=lib/layerzero-v2/packages/layerzero-v2/evm/protocol',
+    '@layerzerolabs/lz-evm-messagelib-v2/=lib/layerzero-v2/packages/layerzero-v2/evm/messagelib',
+    '@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/',
+    'solidity-bytes-utils/=lib/solidity-bytes-utils/',
+    'account-abstraction/=lib/account-abstraction/contracts/',
+    "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol=src/gelato/overrides/IERC20Permit.sol",
+    "lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol=src/erc4337/ECDSA.sol",
+]
+
+
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
 
 [rpc_endpoints]

@@ -42,17 +42,18 @@ contract LyraSelfPayingForwarder is LyraForwarderBase, GelatoRelayContextERC2771
     ) external payable onlyGelatoRelayERC2771 {
         address msgSender = _getMsgSender();
 
-        IERC3009(usdcLocal).receiveWithAuthorization(
-            msgSender,
-            address(this),
-            authData.value,
-            authData.validAfter,
-            authData.validBefore,
-            authData.nonce,
-            authData.v,
-            authData.r,
-            authData.s
-        );
+        IERC3009(usdcLocal)
+            .receiveWithAuthorization(
+                msgSender,
+                address(this),
+                authData.value,
+                authData.validAfter,
+                authData.validBefore,
+                authData.nonce,
+                authData.v,
+                authData.r,
+                authData.s
+            );
 
         // Pay gelato fee, reverts if exceeded maxFeeUSDC
         _transferRelayFeeCapped(maxFeeUSDC);
