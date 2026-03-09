@@ -109,13 +109,12 @@ contract WithdrawBridgeIntent is IntentExecutorBase {
      * @return true if the destination is the SCW owner or explicitly approved
      */
     function isApprovedDestination(address scw, bytes32 destination, bool checkSCWOwner) public view returns (bool) {
-        if (checkSCWOwner && destination == _addressToBytes32(ILightAccount(scw).owner())) {
-            return true;
-        }
-
         bytes32[] storage destinations = approvedDestinations[scw];
         for (uint256 i = 0; i < destinations.length; i++) {
             if (destinations[i] == destination) return true;
+        }
+        if (checkSCWOwner && destination == _addressToBytes32(ILightAccount(scw).owner())) {
+            return true;
         }
         return false;
     }
